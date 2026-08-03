@@ -1,0 +1,6 @@
+{
+  "name": "Enerji Analytics Pro",
+  "description": "Modern Bento Dashboard and energy portfolio analytics for tracking electricity consumption, invoices, YoY trends, AI forecasts, and meter management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
