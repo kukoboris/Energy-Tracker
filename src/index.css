@@ -20,28 +20,30 @@
 .glass-card {
   position: relative;
   background: rgba(25, 31, 49, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              border-color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              background 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              background 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  will-change: transform, box-shadow;
 }
 
 .glass-card:hover {
-  transform: translateY(-4px);
-  background: rgba(25, 31, 49, 0.6);
-  border-color: rgba(173, 198, 255, 0.35);
+  transform: translateY(-5px) scale(1.012);
+  background: rgba(25, 31, 49, 0.65);
+  border-color: rgba(173, 198, 255, 0.3);
+  box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.55), 0 0 25px -2px rgba(173, 198, 255, 0.15);
 }
 
 /* Card Accent Glows */
-.glow-warning:hover { box-shadow: 0 10px 40px -10px rgba(245, 158, 11, 0.3); border-color: rgba(245, 158, 11, 0.4); }
-.glow-primary:hover { box-shadow: 0 10px 40px -10px rgba(173, 198, 255, 0.3); border-color: rgba(173, 198, 255, 0.4); }
-.glow-info:hover { box-shadow: 0 10px 40px -10px rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.4); }
-.glow-tertiary:hover { box-shadow: 0 10px 40px -10px rgba(78, 222, 163, 0.3); border-color: rgba(78, 222, 163, 0.4); }
+.glow-warning:hover { box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.5), 0 0 35px -5px rgba(245, 158, 11, 0.3); border-color: rgba(245, 158, 11, 0.45); }
+.glow-primary:hover { box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.5), 0 0 35px -5px rgba(173, 198, 255, 0.3); border-color: rgba(173, 198, 255, 0.45); }
+.glow-info:hover { box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.5), 0 0 35px -5px rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.45); }
+.glow-tertiary:hover { box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.5), 0 0 35px -5px rgba(78, 222, 163, 0.3); border-color: rgba(78, 222, 163, 0.45); }
 
 /* Shimmer Effect */
 .glass-card::after {

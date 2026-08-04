@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import {
   Clock,
   Zap,
@@ -209,7 +210,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-8">
       {/* Profile Header Bento Block */}
-      <div className="glass-card p-6 sm:p-8 rounded-[2rem] relative group">
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        whileHover={{ y: -3, transition: { duration: 0.25, ease: 'easeOut' } }}
+        className="glass-card p-6 sm:p-8 rounded-[2rem] relative group"
+      >
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-[#adc6ff]/10 rounded-full blur-[100px] pointer-events-none transition-all duration-500 group-hover:bg-[#adc6ff]/15"></div>
         
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -265,12 +272,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Bento Grid */}
       <div className="bento-grid">
         {/* KPI 1: Current Bill */}
-        <div className="glass-card glow-warning p-6 rounded-3xl flex flex-col justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
+          whileTap={{ scale: 0.995 }}
+          className="glass-card glow-warning p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
               Current Bill (Jul)
@@ -291,10 +305,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Due Date</span>
             <span className="text-white font-mono">07.08.2026</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPI 2: Consumption */}
-        <div className="glass-card glow-primary p-6 rounded-3xl flex flex-col justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
+          whileTap={{ scale: 0.995 }}
+          className="glass-card glow-primary p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
               Consumption (Jul)
@@ -315,10 +336,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Daily Avg</span>
             <span className="text-white font-mono">32.39 kWh</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPI 3: YoY Volume Growth */}
-        <div className="glass-card glow-info p-6 rounded-3xl flex flex-col justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
+          whileTap={{ scale: 0.995 }}
+          className="glass-card glow-info p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
               YTD Growth
@@ -339,10 +367,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Cost Diff</span>
             <span className="text-[#f59e0b] font-mono">+145.7%</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPI 4: Unit Rate */}
-        <div className="glass-card glow-tertiary p-6 rounded-3xl flex flex-col justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.2 }}
+          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
+          whileTap={{ scale: 0.995 }}
+          className="glass-card glow-tertiary p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
               Avg kWh Price
@@ -363,10 +398,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Indexation</span>
             <span className="text-[#f43f5e] font-mono">+104% YoY</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Chart Block: kWh YoY (Large Bento) */}
-        <div className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2 bento-row-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.25 }}
+          whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2, ease: 'easeOut' } }}
+          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2 bento-row-2"
+        >
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight">Volume Trend YoY</h3>
@@ -386,10 +427,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="h-72 w-full">
             <Bar data={barChartData} options={barChartOptions} />
           </div>
-        </div>
+        </motion.div>
 
         {/* Forecast Card (Tall Bento) */}
-        <div className="glass-card p-6 sm:p-8 rounded-[2.5rem] bg-gradient-to-br from-[#adc6ff]/10 to-transparent border-[#adc6ff]/20 bento-row-2 flex flex-col justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.3 }}
+          whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2, ease: 'easeOut' } }}
+          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bg-gradient-to-br from-[#adc6ff]/10 to-transparent border-[#adc6ff]/20 bento-row-2 flex flex-col justify-between"
+        >
           <div>
             <div className="flex items-center justify-between mb-4">
               <span className="px-3 py-1 bg-[#adc6ff] text-[#001a42] rounded-full text-[10px] font-bold uppercase tracking-wider">
@@ -440,10 +487,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <p className="text-[11px] text-[#94a3b8] leading-relaxed pt-4 border-t border-white/5">
             Calculated using seasonal patterns and current price indexation (5.69 TL/kWh).
           </p>
-        </div>
+        </motion.div>
 
         {/* Cost Radar (Bento Square) */}
-        <div className="glass-card glow-info p-6 sm:p-8 rounded-[2.5rem]">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.35 }}
+          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
+          className="glass-card glow-info p-6 sm:p-8 rounded-[2.5rem]"
+        >
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Seasonality</h3>
             <Radar className="w-4 h-4 text-[#8b5cf6]" />
@@ -451,10 +504,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="h-44 w-full">
             <RadarChart data={radarChartData} options={radarChartOptions} />
           </div>
-        </div>
+        </motion.div>
 
         {/* 2026 Trend (Large Bento) */}
-        <div className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.4 }}
+          whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2, ease: 'easeOut' } }}
+          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2"
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-bold text-white tracking-tight">2026 Monthly Dynamics</h3>
@@ -466,10 +525,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="h-52 w-full">
             <Line data={lineChartData} options={lineChartOptions} />
           </div>
-        </div>
+        </motion.div>
 
         {/* Mini Analytics: Daily Living Cost */}
-        <div className="glass-card glow-warning p-6 rounded-3xl bg-gradient-to-br from-[#f59e0b]/5 to-transparent border-[#f59e0b]/10 flex flex-col justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.45 }}
+          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
+          className="glass-card glow-warning p-6 rounded-3xl bg-gradient-to-br from-[#f59e0b]/5 to-transparent border-[#f59e0b]/10 flex flex-col justify-between"
+        >
           <div className="flex items-center gap-2.5 mb-2">
             <div className="w-8 h-8 rounded-lg bg-[#f59e0b]/10 flex items-center justify-center text-[#f59e0b]">
               <Wallet className="w-4 h-4" />
@@ -480,10 +545,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <h3 className="text-2xl font-bold font-mono text-white">231.8 <span className="text-xs font-normal text-[#94a3b8]">TL/day</span></h3>
             <p className="text-[10px] text-[#94a3b8] mt-1">Peak Jul 2026 usage</p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Mini Analytics: Taxes Paid */}
-        <div className="glass-card glow-tertiary p-6 rounded-3xl bg-gradient-to-br from-[#4edea3]/5 to-transparent border-[#4edea3]/10 flex flex-col justify-between">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.5 }}
+          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
+          className="glass-card glow-tertiary p-6 rounded-3xl bg-gradient-to-br from-[#4edea3]/5 to-transparent border-[#4edea3]/10 flex flex-col justify-between"
+        >
           <div className="flex items-center gap-2.5 mb-2">
             <div className="w-8 h-8 rounded-lg bg-[#4edea3]/10 flex items-center justify-center text-[#4edea3]">
               <Receipt className="w-4 h-4" />
@@ -494,7 +565,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <h3 className="text-2xl font-bold font-mono text-white">3 336 <span className="text-xs font-normal text-[#94a3b8]">TL</span></h3>
             <p className="text-[10px] text-[#4edea3] mt-1">11.6% of total YTD</p>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Invoice Registry Section */}
