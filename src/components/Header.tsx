@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Search, Bell, CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { Menu, Search, Bell, CheckCircle, AlertTriangle, Info, X, LogOut } from 'lucide-react';
 import { UserAccount, NotificationItem } from '../types';
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   setSearchQuery: (q: string) => void;
   onOpenMobileMenu: () => void;
   onSelectAccountTab?: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,7 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   setSearchQuery,
   onOpenMobileMenu,
-  onSelectAccountTab
+  onSelectAccountTab,
+  onLogout
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -140,11 +142,22 @@ export const Header: React.FC<HeaderProps> = ({
         {/* User Profile Avatar */}
         <button
           onClick={onSelectAccountTab}
-          className="w-10 h-10 rounded-full bg-[#191f31] border border-[#424754] flex items-center justify-center font-bold text-[#adc6ff] hover:border-[#adc6ff] transition-all shadow-md"
+          className="w-10 h-10 rounded-full bg-[#191f31] border border-[#424754] flex items-center justify-center font-bold text-[#adc6ff] hover:border-[#adc6ff] transition-all shadow-md cursor-pointer"
           title="Account Settings"
         >
           KK
         </button>
+
+        {/* Logout Button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="w-10 h-10 rounded-full bg-[#191f31] border border-[#424754] hover:border-[#f43f5e]/50 hover:bg-[#f43f5e]/10 text-[#94a3b8] hover:text-[#f43f5e] flex items-center justify-center transition-all shadow-md cursor-pointer"
+            title="Выйти из системы"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </header>
   );

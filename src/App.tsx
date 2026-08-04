@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initialAccount, initialInvoices, initialNotifications } from './data/mockData';
 import { Invoice, UserAccount, NotificationItem } from './types';
 import { Header } from './components/Header';
@@ -10,9 +10,14 @@ import { AccountsView } from './components/AccountsView';
 import { GoogleSheetView } from './components/GoogleSheetView';
 import { AlertsView } from './components/AlertsView';
 import { InvoiceDetailModal } from './components/InvoiceDetailModal';
+import { LoginView } from './components/LoginView';
 import { X, AlertTriangle, CheckCircle2, Info, Bell } from 'lucide-react';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('fatura_authenticated') === 'true';
+  });
+
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [account, setAccount] = useState<UserAccount>(initialAccount);
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
@@ -20,6 +25,11 @@ export default function App() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('fatura_authenticated');
+    setIsAuthenticated(false);
+  };
 
   // Threshold & Toast State
   const [kwhThreshold, setKwhThreshold] = useState<number>(1000);
@@ -120,6 +130,10 @@ export default function App() {
     }
   };
 
+  if (!isAuthenticated) {
+    return <LoginView onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="flex min-h-screen bg-[#0c1324] text-[#dce1fb] font-sans">
       {/* Sidebar Navigation */}
@@ -129,6 +143,7 @@ export default function App() {
         account={account}
         mobileOpen={mobileMenuOpen}
         setMobileOpen={setMobileMenuOpen}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Workspace */}
@@ -142,6 +157,7 @@ export default function App() {
           setSearchQuery={setSearchQuery}
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           onSelectAccountTab={() => setCurrentTab('accounts')}
+          onLogout={handleLogout}
         />
 
         {/* Global Toast Alert Notification */}

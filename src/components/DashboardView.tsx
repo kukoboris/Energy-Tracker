@@ -17,6 +17,16 @@ import {
   FileDown
 } from 'lucide-react';
 import {
+  ResponsiveContainer,
+  LineChart as RechartsLineChart,
+  Line as RechartsLine,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend as RechartsLegend,
+} from 'recharts';
+import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -31,6 +41,31 @@ import {
 } from 'chart.js';
 import { Bar, Line, Radar as RadarChart } from 'react-chartjs-2';
 import { Invoice, UserAccount } from '../types';
+
+const CustomRechartsTooltip = ({ active, payload, label, unit }: { active?: boolean; payload?: any[]; label?: string; unit?: string }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#161e2e]/95 backdrop-blur-md border border-[#adc6ff]/20 p-3 rounded-xl shadow-2xl text-xs font-sans">
+        <p className="font-bold text-white mb-2 pb-1 border-b border-white/10">{label} Consumption</p>
+        {payload.map((entry: any, index: number) => {
+          if (entry.value === null || entry.value === undefined) return null;
+          return (
+            <div key={`item-${index}`} className="flex items-center justify-between gap-4 py-1">
+              <span className="flex items-center gap-1.5 font-medium" style={{ color: entry.color }}>
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                {entry.name}:
+              </span>
+              <span className="font-mono font-bold text-white ml-2">
+                {Number(entry.value).toLocaleString('ru-RU')} {unit}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+  return null;
+};
 
 ChartJS.register(
   CategoryScale,
@@ -64,6 +99,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   
   // Interactive Forecast Simulation state
   const [acIntensity, setAcIntensity] = useState<number>(100); // % of default
+  const [trendMetric, setTrendMetric] = useState<'KWH' | 'COST'>('KWH');
+
+  // Compute monthly data for Recharts line chart from invoices
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const rechartsMonthlyData = monthNames.map((monthStr, index) => {
+    const monthNumStr = String(index + 1).padStart(2, '0');
+    const inv2025 = invoices.find(i => i.period === `2025-${monthNumStr}`);
+    const inv2026 = invoices.find(i => i.period === `2026-${monthNumStr}`);
+    return {
+      month: monthStr,
+      '2025 Baseline': inv2025 ? (trendMetric === 'KWH' ? inv2025.kwh : inv2025.total_amount_tl) : null,
+      '2026 Actual': inv2026 ? (trendMetric === 'KWH' ? inv2026.kwh : inv2026.total_amount_tl) : null,
+    };
+  });
 
   // Chart Labels & Data
   const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
@@ -506,24 +555,92 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </motion.div>
 
-        {/* 2026 Trend (Large Bento) */}
+        {/* Monthly Energy Consumption Trends (Recharts) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.4 }}
           whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2, ease: 'easeOut' } }}
-          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2"
+          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2 flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h3 className="text-lg font-bold text-white tracking-tight">2026 Monthly Dynamics</h3>
+              <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-[#adc6ff]" />
+                Monthly Consumption Trends
+              </h3>
               <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-0.5">
-                Cost vs Volume
+                Recharts YoY Comparison • {trendMetric === 'KWH' ? 'Volume (kWh)' : 'Cost (TL)'}
               </p>
             </div>
+
+            {/* Metric Mode Toggle */}
+            <div className="flex items-center gap-1 bg-[#161e2e]/80 p-1 rounded-xl border border-white/10 self-start sm:self-auto">
+              <button
+                onClick={() => setTrendMetric('KWH')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  trendMetric === 'KWH'
+                    ? 'bg-[#adc6ff] text-[#001a42] shadow-md'
+                    : 'text-[#94a3b8] hover:text-white'
+                }`}
+              >
+                kWh Usage
+              </button>
+              <button
+                onClick={() => setTrendMetric('COST')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  trendMetric === 'COST'
+                    ? 'bg-[#adc6ff] text-[#001a42] shadow-md'
+                    : 'text-[#94a3b8] hover:text-white'
+                }`}
+              >
+                TL Spend
+              </button>
+            </div>
           </div>
-          <div className="h-52 w-full">
-            <Line data={lineChartData} options={lineChartOptions} />
+
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsLineChart data={rechartsMonthlyData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.06)" vertical={false} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#94a3b8" 
+                  tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'Plus Jakarta Sans' }} 
+                  tickLine={false} 
+                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                />
+                <YAxis 
+                  stroke="#94a3b8" 
+                  tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'JetBrains Mono' }} 
+                  tickLine={false} 
+                  axisLine={false} 
+                />
+                <RechartsTooltip content={<CustomRechartsTooltip unit={trendMetric === 'KWH' ? 'kWh' : 'TL'} />} />
+                <RechartsLegend 
+                  wrapperStyle={{ paddingTop: '10px', fontSize: '11px', color: '#94a3b8' }} 
+                />
+                <RechartsLine 
+                  type="monotone" 
+                  dataKey="2025 Baseline" 
+                  stroke="#94a3b8" 
+                  strokeWidth={2} 
+                  strokeDasharray="4 4" 
+                  dot={{ fill: '#94a3b8', r: 3 }} 
+                  activeDot={{ r: 6 }} 
+                  connectNulls
+                />
+                <RechartsLine 
+                  type="monotone" 
+                  dataKey="2026 Actual" 
+                  stroke="#adc6ff" 
+                  strokeWidth={3} 
+                  dot={{ fill: '#adc6ff', r: 4 }} 
+                  activeDot={{ r: 7, fill: '#60a5fa', stroke: '#ffffff', strokeWidth: 2 }} 
+                  connectNulls
+                />
+              </RechartsLineChart>
+            </ResponsiveContainer>
           </div>
         </motion.div>
 

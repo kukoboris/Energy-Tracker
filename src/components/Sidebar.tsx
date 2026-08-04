@@ -7,7 +7,8 @@ import {
   Users, 
   FileSpreadsheet, 
   BellRing,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 import { UserAccount } from '../types';
 
@@ -17,6 +18,7 @@ interface SidebarProps {
   account: UserAccount;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
+  onLogout?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -24,7 +26,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setCurrentTab,
   account,
   mobileOpen,
-  setMobileOpen
+  setMobileOpen,
+  onLogout
 }) => {
   const percentUsed = Math.min(Math.round((account.currentUsageKwh / account.usageLimitKwh) * 100), 100);
 
@@ -99,6 +102,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <FileSpreadsheet className="w-5 h-5 text-[#4edea3]" />
           <span>Google Sheet</span>
         </button>
+
+        {onLogout && (
+          <button
+            onClick={() => {
+              setMobileOpen(false);
+              onLogout();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium text-[#f43f5e] hover:bg-[#f43f5e]/10 cursor-pointer mt-4"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Выйти из аккаунта</span>
+          </button>
+        )}
       </nav>
 
       {/* Usage Limit Bento Widget */}
