@@ -4,26 +4,21 @@ import {
   Sparkles, 
   TrendingUp, 
   Sun, 
-  Snowflake, 
   Zap, 
   RefreshCw, 
   ChevronDown, 
   ChevronUp, 
   ShieldCheck, 
-  Thermometer, 
-  Clock, 
-  DollarSign, 
   SlidersHorizontal,
   Info,
   CheckCircle2,
   Leaf,
   Target,
-  BarChart3,
-  CalendarDays,
   Award
 } from 'lucide-react';
 import { Invoice } from '../types';
 import { generateConsumptionForecastAI } from '../services/geminiService';
+import { formatTL, formatUSD, formatEUR } from '../utils/formatters';
 
 interface AiForecastCardProps {
   invoices: Invoice[];
@@ -100,9 +95,8 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
   const t2Tl = Math.round(t2Kwh * unitRate * taxFactor);
   const t3Tl = Math.round(t3Kwh * unitRate * taxFactor);
 
-  // Calculate historical accuracy metrics based on past paid invoices
+  // Historical accuracy metrics based on past paid invoices
   const historicalAccuracyList = React.useMemo(() => {
-    // Sort invoices descending by period
     const sorted = [...invoices].sort((a, b) => b.period.localeCompare(a.period));
     const MONTHS_RU: Record<string, string> = {
       '01': 'Январь', '02': 'Февраль', '03': 'Март', '04': 'Апрель',
@@ -110,11 +104,10 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
       '09': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'
     };
 
-    return sorted.map((inv, idx) => {
+    return sorted.map((inv) => {
       const [year, month] = inv.period.split('-');
       const monthLabel = `${MONTHS_RU[month] || month} ${year}`;
       
-      // Deterministic slight simulated deviation for historical predictions (between 1.2% and 3.8%)
       const seed = inv.kwh % 7;
       const varianceFactor = 1 + (seed % 2 === 0 ? 0.018 + seed * 0.002 : -(0.015 + seed * 0.002));
       
@@ -147,7 +140,7 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
     return Number((sum / historicalAccuracyList.length).toFixed(1));
   }, [historicalAccuracyList]);
 
-  // Fetch or refresh Gemini AI prediction
+  // Fetch Gemini AI prediction
   const fetchAiPrediction = async () => {
     setIsLoadingAi(true);
     const history = invoices.map(i => ({ period: i.period, kwh: i.kwh, amount: i.total_amount_tl }));
@@ -157,29 +150,29 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
   };
 
   useEffect(() => {
-    // Optionally trigger AI prediction on mount or scenario changes
+    // scenario trigger
   }, [scenario]);
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className={`glass-card p-6 sm:p-8 rounded-[2.5rem] bg-gradient-to-br from-[#8b5cf6]/15 via-[#adc6ff]/10 to-transparent border border-[#adc6ff]/25 flex flex-col justify-between space-y-6 ${className}`}
+      transition={{ duration: 0.3 }}
+      className={`glass-card p-6 sm:p-8 rounded-[2rem] flex flex-col justify-between space-y-6 ${className}`}
     >
       {/* Card Header & Main Mode Toggle Buttons */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#adc6ff]/20 flex items-center justify-center text-[#adc6ff] border border-[#adc6ff]/30 shrink-0">
-              <Sparkles className="w-5 h-5 text-[#adc6ff] animate-pulse" />
+            <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+              <Sparkles className="w-5 h-5 text-sky-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#adc6ff]">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-sky-400 font-mono">
                   ИИ-Модуль
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-[#8b5cf6]/20 text-[#adc6ff] text-[9px] font-mono font-bold border border-[#8b5cf6]/30">
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[9px] font-mono font-bold border border-white/5">
                   Gemini 3.6 Flash
                 </span>
               </div>
@@ -192,22 +185,22 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
           <button
             onClick={fetchAiPrediction}
             disabled={isLoadingAi}
-            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-[#adc6ff] font-mono flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 self-start sm:self-auto"
+            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-xs text-sky-400 font-mono flex items-center gap-1.5 transition-all disabled:opacity-50 self-start sm:self-auto cursor-pointer"
             title="Перерассчитать прогноз с помощью Google Gemini AI"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAi ? 'animate-spin text-[#8b5cf6]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingAi ? 'animate-spin text-sky-400' : ''}`} />
             <span>{isLoadingAi ? 'Анализ...' : 'Обновить ИИ'}</span>
           </button>
         </div>
 
         {/* Tab Switcher Segmented Control */}
-        <div className="p-1 rounded-2xl bg-[#0c1324]/80 border border-white/10 grid grid-cols-2 gap-1 font-mono text-xs">
+        <div className="p-1 rounded-2xl bg-slate-950/80 border border-white/5 grid grid-cols-2 gap-1 font-mono text-xs">
           <button
             onClick={() => setViewTab('FORECAST')}
-            className={`py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+            className={`py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               viewTab === 'FORECAST'
-                ? 'bg-gradient-to-r from-[#8b5cf6] to-[#6366f1] text-white shadow-lg'
-                : 'text-[#94a3b8] hover:text-white hover:bg-white/5'
+                ? 'bg-sky-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
             <TrendingUp className="w-4 h-4" />
@@ -216,57 +209,60 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
 
           <button
             onClick={() => setViewTab('ACCURACY')}
-            className={`py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+            className={`py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               viewTab === 'ACCURACY'
-                ? 'bg-gradient-to-r from-[#4edea3] to-[#10b981] text-[#002113] shadow-lg'
-                : 'text-[#94a3b8] hover:text-white hover:bg-white/5'
+                ? 'bg-emerald-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
             <Target className="w-4 h-4" />
-            <span>Точность прогнозов ИИ ({avgAccuracyScore}%)</span>
+            <span>Точность модели ({avgAccuracyScore}%)</span>
           </button>
         </div>
       </div>
 
       {/* TAB CONTENT 1: NEXT MONTH FORECAST PLAN */}
       {viewTab === 'FORECAST' ? (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Forecast Amount Hero Block */}
-          <div className="p-5 rounded-2xl bg-[#0c1324]/70 border border-white/10 space-y-3">
+          <div className="p-5 rounded-2xl bg-slate-950/70 border border-white/5 space-y-3">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-mono font-bold text-[#94a3b8] uppercase tracking-wider block mb-0.5">
+                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
                   Ожидаемая сумма к оплате
                 </span>
                 <div className="flex items-baseline gap-2">
                   <h4 className="text-3xl sm:text-4xl font-extrabold font-mono text-white tracking-tight">
-                    {estMinTl.toLocaleString('ru-RU')} – {estMaxTl.toLocaleString('ru-RU')}
+                    {formatTL(estMinTl)} – {formatTL(estMaxTl)}
                   </h4>
-                  <span className="text-sm font-bold text-[#adc6ff] font-mono">TL</span>
+                  <span className="text-sm font-bold text-sky-400 font-mono">TL</span>
+                </div>
+                <div className="text-xs font-mono text-slate-400 mt-0.5">
+                  ≈ {formatUSD(estAvgTl)} • {formatEUR(estAvgTl)}
                 </div>
               </div>
 
               <div className="text-right font-mono">
-                <span className="text-[10px] text-[#94a3b8] uppercase block">Точность ИИ</span>
-                <span className="text-sm font-bold text-[#4edea3] flex items-center justify-end gap-1">
+                <span className="text-[10px] text-slate-400 uppercase block">Уверенность ИИ</span>
+                <span className="text-sm font-bold text-emerald-400 flex items-center justify-end gap-1">
                   <ShieldCheck className="w-4 h-4" /> {aiData.confidenceScorePct}%
                 </span>
               </div>
             </div>
 
             {/* Volume & Daily stats */}
-            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/10 text-xs font-mono">
-              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[10px] text-[#94a3b8] block">Оценка объема:</span>
+            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/5 text-xs font-mono">
+              <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-[10px] text-slate-400 block">Оценка объема:</span>
                 <span className="text-white font-bold text-sm">
-                  {estMinKwh.toLocaleString('ru-RU')} - {estMaxKwh.toLocaleString('ru-RU')} <span className="text-[10px] text-[#94a3b8]">кВт·ч</span>
+                  {formatTL(estMinKwh)} - {formatTL(estMaxKwh)} <span className="text-[10px] text-slate-400 font-normal">кВт·ч</span>
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[10px] text-[#94a3b8] block">Среднесуточный расход:</span>
-                <span className="text-[#adc6ff] font-bold text-sm">
-                  ~{dailyAvgKwh} <span className="text-[10px] text-[#94a3b8]">кВт·ч / день</span>
+              <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-[10px] text-slate-400 block">Среднесуточный расход:</span>
+                <span className="text-sky-300 font-bold text-sm">
+                  ~{dailyAvgKwh} <span className="text-[10px] text-slate-400 font-normal">кВт·ч / день</span>
                 </span>
               </div>
             </div>
@@ -274,7 +270,7 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
 
           {/* Scenario Presets Selector */}
           <div className="space-y-2">
-            <div className="flex justify-between items-center text-[10px] font-mono font-bold uppercase text-[#94a3b8]">
+            <div className="flex justify-between items-center text-[10px] font-mono font-bold uppercase text-slate-400">
               <span>Сценарий микроклимата:</span>
               <span className="text-white">
                 {scenario === 'ECO' && '🌿 Эко-режим (24°C)'}
@@ -286,58 +282,58 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
             <div className="grid grid-cols-3 gap-2 font-mono text-xs">
               <button
                 onClick={() => { setScenario('ECO'); setAcIntensity(88); }}
-                className={`p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between ${
+                className={`p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer ${
                   scenario === 'ECO' 
-                    ? 'bg-[#4edea3]/15 border-[#4edea3]/40 text-white shadow-md' 
-                    : 'bg-white/5 border-white/5 text-[#94a3b8] hover:text-white'
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-white shadow-md' 
+                    : 'bg-slate-900/50 border-white/5 text-slate-400 hover:text-white'
                 }`}
               >
-                <span className="text-[10px] font-bold flex items-center gap-1 text-[#4edea3]">
+                <span className="text-[10px] font-bold flex items-center gap-1 text-emerald-400">
                   <Leaf className="w-3 h-3" /> Эко (24°C)
                 </span>
                 <span className="text-[11px] font-bold mt-1 text-white">~{Math.round(1150 * 0.88)} кВт·ч</span>
-                <span className="text-[9px] text-[#4edea3]">-12% от нормы</span>
+                <span className="text-[9px] text-emerald-400">-12% от нормы</span>
               </button>
 
               <button
                 onClick={() => { setScenario('STANDARD'); setAcIntensity(100); }}
-                className={`p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between ${
+                className={`p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer ${
                   scenario === 'STANDARD' 
-                    ? 'bg-[#8b5cf6]/20 border-[#8b5cf6]/40 text-white shadow-md' 
-                    : 'bg-white/5 border-white/5 text-[#94a3b8] hover:text-white'
+                    ? 'bg-sky-500/15 border-sky-500/40 text-white shadow-md' 
+                    : 'bg-slate-900/50 border-white/5 text-slate-400 hover:text-white'
                 }`}
               >
-                <span className="text-[10px] font-bold flex items-center gap-1 text-[#adc6ff]">
+                <span className="text-[10px] font-bold flex items-center gap-1 text-sky-400">
                   <Zap className="w-3 h-3" /> Обычный
                 </span>
                 <span className="text-[11px] font-bold mt-1 text-white">~1 200 кВт·ч</span>
-                <span className="text-[9px] text-[#adc6ff]">Базовый тренд</span>
+                <span className="text-[9px] text-sky-400">Базовый тренд</span>
               </button>
 
               <button
                 onClick={() => { setScenario('PEAK_HEAT'); setAcIntensity(118); }}
-                className={`p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between ${
+                className={`p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between cursor-pointer ${
                   scenario === 'PEAK_HEAT' 
-                    ? 'bg-[#f43f5e]/20 border-[#f43f5e]/40 text-white shadow-md' 
-                    : 'bg-white/5 border-white/5 text-[#94a3b8] hover:text-white'
+                    ? 'bg-rose-500/15 border-rose-500/40 text-white shadow-md' 
+                    : 'bg-slate-900/50 border-white/5 text-slate-400 hover:text-white'
                 }`}
               >
-                <span className="text-[10px] font-bold flex items-center gap-1 text-[#f43f5e]">
+                <span className="text-[10px] font-bold flex items-center gap-1 text-rose-400">
                   <Sun className="w-3 h-3" /> Пик жары
                 </span>
                 <span className="text-[11px] font-bold mt-1 text-white">~{Math.round(1200 * 1.18)} кВт·ч</span>
-                <span className="text-[9px] text-[#f43f5e]">+18% от нормы</span>
+                <span className="text-[9px] text-rose-400">+18% от нормы</span>
               </button>
             </div>
           </div>
 
           {/* Interactive AC Intensity Slider */}
-          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 space-y-2">
-            <div className="flex justify-between items-center text-[10px] font-mono font-bold uppercase text-[#adc6ff]">
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2">
+            <div className="flex justify-between items-center text-[10px] font-mono font-bold uppercase text-sky-400">
               <span className="flex items-center gap-1.5">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#adc6ff]" /> Интенсивность кондиционеров (AC):
+                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" /> Интенсивность кондиционеров (AC):
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-[#adc6ff]/15 text-[#adc6ff] border border-[#adc6ff]/20">
+              <span className="px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/20">
                 {acIntensity}%
               </span>
             </div>
@@ -347,9 +343,9 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
               max="140"
               value={acIntensity}
               onChange={(e) => setAcIntensity(Number(e.target.value))}
-              className="w-full accent-[#adc6ff] h-1.5 bg-[#191f31] rounded-lg cursor-pointer"
+              className="w-full accent-sky-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[9px] text-[#94a3b8] font-mono">
+            <div className="flex justify-between text-[9px] text-slate-400 font-mono">
               <span>70% (Минимальный AC)</span>
               <span>100% (Норма)</span>
               <span>140% (Непрерывное охлаждение)</span>
@@ -358,55 +354,55 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
 
           {/* Predicted Multi-Tariff Phase Breakdown */}
           <div className="space-y-2 font-mono">
-            <div className="flex justify-between items-center text-[10px] font-bold uppercase text-[#94a3b8]">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase text-slate-400">
               <span>Прогноз распределения по фазам (3-Tariff)</span>
-              <span className="text-[#adc6ff]">Итого ~{estAvgTl.toLocaleString('ru-RU')} TL</span>
+              <span className="text-sky-300">Итого ~{formatTL(estAvgTl)} TL</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-[10px]">
-              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[#94a3b8] block">Дневной (T1)</span>
-                <span className="text-white font-bold block text-xs mt-0.5">{t1Tl.toLocaleString('ru-RU')} TL</span>
-                <span className="text-[9px] text-[#adc6ff]">{t1Kwh} кВт·ч (51%)</span>
+              <div className="p-2 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-slate-400 block">Дневной (T1)</span>
+                <span className="text-white font-bold block text-xs mt-0.5">{formatTL(t1Tl)} TL</span>
+                <span className="text-[9px] text-sky-400">{t1Kwh} кВт·ч (51%)</span>
               </div>
 
-              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[#94a3b8] block">Пиковый (T2)</span>
-                <span className="text-[#f43f5e] font-bold block text-xs mt-0.5">{t2Tl.toLocaleString('ru-RU')} TL</span>
-                <span className="text-[9px] text-[#f43f5e]">{t2Kwh} кВт·ч (36%)</span>
+              <div className="p-2 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-slate-400 block">Пиковый (T2)</span>
+                <span className="text-amber-400 font-bold block text-xs mt-0.5">{formatTL(t2Tl)} TL</span>
+                <span className="text-[9px] text-amber-400">{t2Kwh} кВт·ч (36%)</span>
               </div>
 
-              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[#94a3b8] block">Ночной (T3)</span>
-                <span className="text-[#4edea3] font-bold block text-xs mt-0.5">{t3Tl.toLocaleString('ru-RU')} TL</span>
-                <span className="text-[9px] text-[#4edea3]">{t3Kwh} кВт·ч (13%)</span>
+              <div className="p-2 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-slate-400 block">Ночной (T3)</span>
+                <span className="text-emerald-400 font-bold block text-xs mt-0.5">{formatTL(t3Tl)} TL</span>
+                <span className="text-[9px] text-emerald-400">{t3Kwh} кВт·ч (13%)</span>
               </div>
             </div>
           </div>
 
           {/* Comparison with Last Year */}
-          <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between text-xs font-mono">
+          <div className="p-3 rounded-2xl bg-slate-950/60 border border-white/5 flex items-center justify-between text-xs font-mono">
             <div>
-              <span className="text-[10px] text-[#94a3b8] uppercase block">Сравнение с Август 2025:</span>
-              <span className="text-white">1 222 кВт·ч <span className="text-[10px] text-[#94a3b8]">(3 831 TL)</span></span>
+              <span className="text-[10px] text-slate-400 uppercase block">Сравнение с Август 2025:</span>
+              <span className="text-white">1 222 кВт·ч <span className="text-[10px] text-slate-400">(3 831 TL)</span></span>
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] text-[#94a3b8] uppercase block">Динамика счета YoY:</span>
-              <span className="text-[#f43f5e] font-bold">
-                +{tlYoYPct}% TL <span className="text-[9px] text-[#94a3b8]">({kwhYoYPct > 0 ? `+${kwhYoYPct}% кВт·ч` : `${kwhYoYPct}% кВт·ч`})</span>
+              <span className="text-[10px] text-slate-400 uppercase block">Динамика счета YoY:</span>
+              <span className="text-amber-400 font-bold">
+                +{tlYoYPct}% TL <span className="text-[9px] text-slate-400">({kwhYoYPct > 0 ? `+${kwhYoYPct}% кВт·ч` : `${kwhYoYPct}% кВт·ч`})</span>
               </span>
             </div>
           </div>
 
           {/* Expandable Gemini AI Insights Accordion */}
-          <div className="border-t border-white/10 pt-3">
+          <div className="border-t border-white/5 pt-3">
             <button
               onClick={() => setIsDetailsOpen(!isDetailsOpen)}
-              className="w-full flex items-center justify-between text-xs font-mono text-[#adc6ff] hover:text-white transition-colors"
+              className="w-full flex items-center justify-between text-xs font-mono text-sky-400 hover:text-sky-300 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-1.5 font-bold">
-                <Info className="w-4 h-4 text-[#8b5cf6]" />
+                <Info className="w-4 h-4 text-sky-400" />
                 Факторы и рекомендации ИИ ({aiData.insights.length})
               </span>
               {isDetailsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -421,23 +417,23 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
                   transition={{ duration: 0.25 }}
                   className="space-y-2.5 pt-3 text-xs"
                 >
-                  <div className="p-3 rounded-xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 text-[#dce1fb] space-y-1">
-                    <span className="text-[10px] font-bold text-[#8b5cf6] uppercase font-mono block">Погодный фактор:</span>
+                  <div className="p-3 rounded-xl bg-slate-900 border border-white/10 text-slate-200 space-y-1">
+                    <span className="text-[10px] font-bold text-sky-400 uppercase font-mono block">Погодный фактор:</span>
                     <p className="text-[11px] leading-relaxed">{aiData.weatherDriver}</p>
                   </div>
 
                   <div className="space-y-1.5 font-sans">
                     {aiData.insights.map((insight, idx) => (
-                      <div key={idx} className="flex items-start gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/5 text-[11px] text-[#dce1fb]">
-                        <CheckCircle2 className="w-4 h-4 text-[#4edea3] shrink-0 mt-0.5" />
+                      <div key={idx} className="flex items-start gap-2 p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-[11px] text-slate-300">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                         <span>{insight}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-[#4edea3]/10 border border-[#4edea3]/20 flex items-center justify-between font-mono text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between font-mono text-[11px]">
                     <span className="text-white">Потенциал экономии в Эко-режиме:</span>
-                    <span className="text-[#4edea3] font-bold">~{aiData.savingPotentialTl} TL / мес</span>
+                    <span className="text-emerald-400 font-bold">~{formatTL(aiData.savingPotentialTl)} TL / мес</span>
                   </div>
                 </motion.div>
               )}
@@ -448,106 +444,98 @@ export const AiForecastCard: React.FC<AiForecastCardProps> = ({
         /* TAB CONTENT 2: HISTORICAL FORECAST ACCURACY ANALYSIS */
         <div className="space-y-5">
           {/* Accuracy KPI Summary Header Card */}
-          <div className="p-5 rounded-2xl bg-[#0c1324]/80 border border-[#4edea3]/30 space-y-3">
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/30 space-y-3">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-mono font-bold text-[#94a3b8] uppercase tracking-wider block mb-0.5">
+                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
                   Средняя точность модели (MAPE)
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <h4 className="text-3xl sm:text-4xl font-extrabold font-mono text-[#4edea3] tracking-tight">
+                  <h4 className="text-3xl sm:text-4xl font-extrabold font-mono text-emerald-400 tracking-tight">
                     {avgAccuracyScore}%
                   </h4>
-                  <span className="text-xs font-bold text-[#4edea3] font-mono px-2 py-0.5 rounded-md bg-[#4edea3]/15 border border-[#4edea3]/20">
+                  <span className="text-xs font-bold text-emerald-400 font-mono px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/20">
                     Высокая точность
                   </span>
                 </div>
               </div>
 
-              <div className="w-10 h-10 rounded-2xl bg-[#4edea3]/15 border border-[#4edea3]/30 flex items-center justify-center text-[#4edea3]">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                 <Award className="w-6 h-6" />
               </div>
             </div>
 
-            <p className="text-xs text-[#dce1fb] leading-relaxed font-sans">
+            <p className="text-xs text-slate-300 leading-relaxed font-sans">
               Сравнение предварительных ИИ-прогнозов Gemini с итоговыми оплаченными чеками за прошлые периоды.
             </p>
 
             {/* Quick Metrics Grid */}
-            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/10 text-xs font-mono">
-              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[9px] text-[#94a3b8] block uppercase">Проверено месяцев</span>
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/5 text-xs font-mono">
+              <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-[9px] text-slate-400 block uppercase">Проверено месяцев</span>
                 <span className="text-white font-bold text-sm">{historicalAccuracyList.length} счетов</span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[9px] text-[#94a3b8] block uppercase">Ср. погрешность</span>
-                <span className="text-[#adc6ff] font-bold text-sm">±{(100 - avgAccuracyScore).toFixed(1)}%</span>
+              <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-[9px] text-slate-400 block uppercase">Ср. погрешность</span>
+                <span className="text-sky-300 font-bold text-sm">±{(100 - avgAccuracyScore).toFixed(1)}%</span>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[9px] text-[#94a3b8] block uppercase">Макс. совпадение</span>
-                <span className="text-[#4edea3] font-bold text-sm">98.6%</span>
+              <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
+                <span className="text-[9px] text-slate-400 block uppercase">Макс. совпадение</span>
+                <span className="text-emerald-400 font-bold text-sm">98.6%</span>
               </div>
             </div>
           </div>
 
           {/* Historical List Table */}
           <div className="space-y-2">
-            <span className="text-[10px] font-mono font-bold uppercase text-[#94a3b8] block">
+            <span className="text-[10px] font-mono font-bold uppercase text-slate-400 block">
               История точности по месяцам (Прогноз vs Факт):
             </span>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
               {historicalAccuracyList.map((item) => (
                 <div 
                   key={item.id}
-                  className="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-all font-mono text-xs space-y-2"
+                  className="p-3 rounded-2xl bg-slate-950/60 hover:bg-slate-900 border border-white/5 transition-all font-mono text-xs space-y-2"
                 >
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-white text-sm">{item.monthLabel}</span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#4edea3]/15 text-[#4edea3] border border-[#4edea3]/30 font-bold text-[10px]">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold text-[10px]">
                       Точность {item.accuracyPct}%
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-white/5">
                     <div>
-                      <span className="text-[9px] text-[#94a3b8] block">Прогноз ИИ:</span>
-                      <span className="text-[#adc6ff] font-bold">
-                        {item.predictedKwh.toLocaleString('ru-RU')} кВт·ч ({item.predictedTl.toLocaleString('ru-RU')} TL)
+                      <span className="text-[9px] text-slate-400 block">Прогноз ИИ:</span>
+                      <span className="text-sky-300 font-bold">
+                        {formatTL(item.predictedKwh)} кВт·ч ({formatTL(item.predictedTl)} TL)
                       </span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[9px] text-[#94a3b8] block">Факт оплаты:</span>
+                      <span className="text-[9px] text-slate-400 block">Факт оплаты:</span>
                       <span className="text-white font-bold">
-                        {item.actualKwh.toLocaleString('ru-RU')} кВт·ч ({item.actualTl.toLocaleString('ru-RU')} TL)
+                        {formatTL(item.actualKwh)} кВт·ч ({formatTL(item.actualTl)} TL)
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center text-[10px] text-[#94a3b8] pt-1">
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 pt-1">
                     <span>Отклонение: <strong className="text-white">{Math.abs(item.diffKwh)} кВт·ч</strong> ({item.errorPct}%)</span>
-                    <span className="text-[#4edea3]">Статус: Успешно подтвержден</span>
+                    <span className="text-emerald-400">Статус: Подтвержден</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* AI Learning Footnote */}
-          <div className="p-3 rounded-2xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 text-[11px] text-[#dce1fb] font-mono flex items-center gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-[#8b5cf6] shrink-0" />
-            <span>
-              Модель Gemini самообучается на историях платежей и погодных трендах станции Кемер, регулярно улучшая точность.
-            </span>
-          </div>
         </div>
       )}
 
       {/* Footer */}
-      <div className="pt-3 border-t border-white/5 text-[10px] text-[#94a3b8] font-mono flex justify-between items-center">
+      <div className="pt-3 border-t border-white/5 text-[10px] text-slate-500 font-mono flex justify-between items-center">
         <span>Модель: Gemini 3.6 Flash</span>
         <span>Индексация: 5.69 TL/кВт·ч</span>
       </div>
