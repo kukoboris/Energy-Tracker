@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initialAccount, initialInvoices, initialNotifications } from './data/mockData';
 import { Invoice, UserAccount, NotificationItem } from './types';
 import { Header } from './components/Header';
@@ -12,7 +12,6 @@ import { AlertsView } from './components/AlertsView';
 import { InvoiceDetailModal } from './components/InvoiceDetailModal';
 import { LoginView } from './components/LoginView';
 import { X, AlertTriangle, CheckCircle2, Info, Bell } from 'lucide-react';
-import { formatTL } from './utils/formatters';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -53,20 +52,20 @@ export default function App() {
     }));
 
     const paidInv = invoices.find(i => i.id === invoiceId);
-    const amount = paidInv ? formatTL(paidInv.total_amount_tl) : '';
+    const amount = paidInv ? paidInv.total_amount_tl.toLocaleString('ru-RU') : '';
 
     // Add notification
     const newNotif: NotificationItem = {
       id: `n-${Date.now()}`,
-      title: 'Счет успешно оплачен',
-      message: `Оплата на сумму ${amount} TL за период ${paidInv?.period || ''} подтверждена.`,
-      timestamp: 'Только что',
+      title: 'Invoice Payment Completed',
+      message: `Successfully paid ${amount} TL for period ${paidInv?.period || ''}.`,
+      timestamp: 'Just now',
       type: 'success',
       read: false
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    showToast(`✓ Оплата ${amount} TL успешно проведена!`, 'success');
+    showToast(`✓ Payment of ${amount} TL successfully processed!`, 'success');
   };
 
   const handleImportInvoices = (newInvoices: Invoice[]) => {
@@ -80,16 +79,16 @@ export default function App() {
     });
 
     if (breaches > 0) {
-      showToast(`⚠️ Импортировано ${newInvoices.length} счетов (${breaches} превышают порог ${kwhThreshold} кВт·ч / ${formatTL(costThreshold)} TL)`, 'alert');
+      showToast(`⚠️ Imported ${newInvoices.length} invoices (${breaches} exceed set threshold of ${kwhThreshold} kWh / ${costThreshold} TL)`, 'alert');
     } else {
-      showToast(`✓ Успешно импортировано ${newInvoices.length} счетов!`, 'success');
+      showToast(`✓ Successfully imported ${newInvoices.length} invoice statements!`, 'success');
     }
 
     const newNotif: NotificationItem = {
       id: `n-${Date.now()}`,
-      title: 'Импорт пакета счетов',
-      message: `В базу добавлено ${newInvoices.length} новых расчетных периодов.`,
-      timestamp: 'Только что',
+      title: 'Batch Invoices Imported',
+      message: `${newInvoices.length} new statements were added to database.`,
+      timestamp: 'Just now',
       type: breaches > 0 ? 'alert' : 'info',
       read: false
     };
@@ -99,30 +98,31 @@ export default function App() {
   const handleAddInvoice = (newInv: Invoice) => {
     setInvoices(prev => [newInv, ...prev]);
 
+    // Check if new invoice breaches threshold
     const isKwhExceeded = newInv.kwh > kwhThreshold;
     const isCostExceeded = newInv.total_amount_tl > costThreshold;
 
     if (isKwhExceeded || isCostExceeded) {
-      const msg = `⚠️ ВНИМАНИЕ: Новый счет (${newInv.period}) на ${newInv.kwh} кВт·ч (${formatTL(newInv.total_amount_tl)} TL) превышает установленный порог!`;
+      const msg = `⚠️ ALERT: New invoice (${newInv.period}) of ${newInv.kwh} kWh (${newInv.total_amount_tl.toLocaleString('ru-RU')} TL) EXCEEDS threshold limit!`;
       showToast(msg, 'alert');
 
       const alertNotif: NotificationItem = {
         id: `n-${Date.now()}`,
-        title: `Превышение лимита: ${newInv.period}`,
-        message: `Зарегистрирован счет ${newInv.kwh} кВт·ч при пороге ${kwhThreshold} кВт·ч.`,
-        timestamp: 'Только что',
+        title: `Consumption Threshold Exceeded: ${newInv.period}`,
+        message: `Registered invoice ${newInv.kwh} kWh exceeds configured threshold of ${kwhThreshold} kWh.`,
+        timestamp: 'Just now',
         type: 'alert',
         read: false
       };
       setNotifications(prev => [alertNotif, ...prev]);
     } else {
-      showToast(`✓ Новый счет за ${newInv.period} добавлен!`, 'success');
+      showToast(`✓ New statement for ${newInv.period} added!`, 'success');
 
       const newNotif: NotificationItem = {
         id: `n-${Date.now()}`,
-        title: 'Новый счет добавлен',
-        message: `Счет за период ${newInv.period} (${formatTL(newInv.total_amount_tl)} TL) зарегистрирован.`,
-        timestamp: 'Только что',
+        title: 'New Statement Added',
+        message: `Statement for period ${newInv.period} (${newInv.total_amount_tl.toLocaleString('ru-RU')} TL) was registered.`,
+        timestamp: 'Just now',
         type: 'info',
         read: false
       };
@@ -135,7 +135,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0b111e] text-slate-200 font-sans">
+    <div className="flex min-h-screen bg-[#0c1324] text-[#dce1fb] font-sans">
       {/* Sidebar Navigation */}
       <Sidebar
         currentTab={currentTab}
@@ -158,35 +158,32 @@ export default function App() {
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           onSelectAccountTab={() => setCurrentTab('accounts')}
           onLogout={handleLogout}
-          invoices={invoices}
-          onSelectInvoice={(inv) => setSelectedInvoice(inv)}
-          onNavigateTab={(tab) => setCurrentTab(tab)}
         />
 
         {/* Global Toast Alert Notification */}
         {toast && (
-          <div className="fixed top-24 right-4 sm:right-8 z-50 max-w-md w-full transition-all">
+          <div className="fixed top-20 right-6 sm:right-8 z-50 max-w-md w-full animate-bounce">
             <div className={`p-4 rounded-2xl shadow-2xl border flex items-start gap-3 backdrop-blur-xl ${
               toast.type === 'alert'
-                ? 'bg-rose-950/90 text-rose-200 border-rose-500/40'
+                ? 'bg-[#f43f5e] text-white border-[#f43f5e]'
                 : toast.type === 'warning'
-                ? 'bg-amber-950/90 text-amber-200 border-amber-500/40'
+                ? 'bg-[#f59e0b] text-[#002113] border-[#f59e0b] font-bold'
                 : toast.type === 'info'
-                ? 'bg-slate-900/90 text-sky-200 border-sky-500/40'
-                : 'bg-emerald-950/90 text-emerald-200 border-emerald-500/40'
+                ? 'bg-[#191f31] text-[#adc6ff] border-[#adc6ff]'
+                : 'bg-[#4edea3] text-[#002113] border-[#4edea3] font-bold'
             }`}>
               <div className="shrink-0 mt-0.5">
-                {toast.type === 'alert' && <AlertTriangle className="w-5 h-5 text-rose-400" />}
-                {toast.type === 'warning' && <Bell className="w-5 h-5 text-amber-400" />}
-                {toast.type === 'info' && <Info className="w-5 h-5 text-sky-400" />}
-                {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+                {toast.type === 'alert' && <AlertTriangle className="w-5 h-5" />}
+                {toast.type === 'warning' && <Bell className="w-5 h-5" />}
+                {toast.type === 'info' && <Info className="w-5 h-5" />}
+                {toast.type === 'success' && <CheckCircle2 className="w-5 h-5" />}
               </div>
-              <div className="flex-1 text-xs font-medium leading-relaxed font-mono">
+              <div className="flex-1 text-xs font-medium leading-relaxed">
                 {toast.message}
               </div>
               <button
                 onClick={() => setToast(null)}
-                className="p-1 rounded-lg hover:bg-white/10 transition-colors shrink-0 text-slate-400 hover:text-white cursor-pointer"
+                className="p-1 rounded-lg hover:bg-black/10 transition-colors shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -212,7 +209,6 @@ export default function App() {
               onAddInvoice={handleAddInvoice}
               onImportInvoices={handleImportInvoices}
               onPayInvoice={handlePayInvoice}
-              searchQuery={searchQuery}
             />
           )}
 
@@ -240,7 +236,7 @@ export default function App() {
               account={account}
               onUpdateAccount={(updated) => {
                 setAccount(updated);
-                showToast('✓ Параметры аккаунта успешно сохранены!', 'success');
+                showToast('✓ Account details updated successfully!', 'success');
               }}
             />
           )}

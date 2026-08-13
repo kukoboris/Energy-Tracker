@@ -3,17 +3,18 @@ import {
   X, 
   Upload, 
   FileSpreadsheet, 
+  FileText, 
   Sparkles, 
+  Check, 
   AlertCircle, 
   Download, 
   Plus, 
-  RefreshCw, 
-  Zap, 
-  CheckCircle2 
+  RefreshCw,
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
 import { Invoice } from '../types';
 import { extractInvoiceFromContent } from '../services/geminiService';
-import { formatTL } from '../utils/formatters';
 
 interface InvoiceImportModalProps {
   onClose: () => void;
@@ -147,11 +148,11 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
           }
         ]);
       } else {
-        setParseError('Не удалось распознать структуру счета. Попробуйте CSV шаблон.');
+        setParseError('Could not recognize invoice structure in file. Try using the sample CSV format.');
       }
     } catch (err) {
       console.error(err);
-      setParseError('Ошибка чтения файла. Загрузите корректный CSV, JSON или документ счета.');
+      setParseError('Failed to parse file format. Please upload a valid CSV, JSON, or invoice text document.');
     }
   };
 
@@ -190,7 +191,7 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
             }
           ]);
         } else {
-          setParseError('ИИ не удалось извлечь данные с изображения. Введите вручную или загрузите CSV.');
+          setParseError('AI could not extract invoice details from image. Please enter manually or try CSV.');
         }
       };
       reader.readAsDataURL(file);
@@ -259,11 +260,11 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="glass-card bg-slate-950 border border-white/10 rounded-[2.5rem] max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      <div className="glass-card bg-[#0c1324] border border-[#424754] rounded-[2.5rem] max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 p-2 rounded-full bg-slate-900 border border-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          className="absolute right-6 top-6 p-2 rounded-full bg-[#191f31] border border-[#424754] text-[#94a3b8] hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -271,12 +272,12 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-[#adc6ff]/15 text-[#adc6ff] flex items-center justify-center">
               <Upload className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-xl font-extrabold text-white">Импорт и Загрузка Счетов</h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#94a3b8]">
                 Загружайте CSV, JSON или сканы документов для импорта счетов за электроэнергию
               </p>
             </div>
@@ -284,14 +285,14 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6 font-mono">
+        <div className="flex items-center justify-between border-b border-[#424754] pb-4 mb-6">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('upload')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'upload'
-                  ? 'bg-sky-500 text-slate-950'
-                  : 'bg-slate-900 text-slate-400 hover:text-white'
+                  ? 'bg-[#adc6ff] text-[#001a42]'
+                  : 'bg-[#151b2d] text-[#94a3b8] hover:text-white'
               }`}
             >
               <FileSpreadsheet className="w-4 h-4" />
@@ -300,10 +301,10 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
 
             <button
               onClick={() => setActiveTab('manual')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'manual'
-                  ? 'bg-sky-500 text-slate-950'
-                  : 'bg-slate-900 text-slate-400 hover:text-white'
+                  ? 'bg-[#adc6ff] text-[#001a42]'
+                  : 'bg-[#151b2d] text-[#94a3b8] hover:text-white'
               }`}
             >
               <Plus className="w-4 h-4" />
@@ -313,10 +314,10 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
 
           <button
             onClick={handleDownloadSampleCSV}
-            className="flex items-center gap-1.5 text-xs text-sky-400 hover:underline cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-[#adc6ff] hover:underline font-mono"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Образец CSV</span>
+            <span>Скачать Образец CSV</span>
           </button>
         </div>
 
@@ -330,8 +331,8 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-all ${
                 isDragging
-                  ? 'border-emerald-400 bg-emerald-500/10'
-                  : 'border-white/10 bg-slate-900/60 hover:border-sky-400 hover:bg-slate-900'
+                  ? 'border-[#4edea3] bg-[#4edea3]/10'
+                  : 'border-[#424754] bg-[#151b2d]/60 hover:border-[#adc6ff] hover:bg-[#151b2d]'
               }`}
             >
               <input
@@ -342,25 +343,25 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
                 className="hidden"
               />
 
-              <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 text-sky-400 flex items-center justify-center mx-auto mb-3 shadow-inner">
-                {parsing ? <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" /> : <Upload className="w-6 h-6" />}
+              <div className="w-14 h-14 rounded-2xl bg-[#191f31] border border-[#424754] text-[#adc6ff] flex items-center justify-center mx-auto mb-3 shadow-inner">
+                {parsing ? <RefreshCw className="w-6 h-6 animate-spin text-[#4edea3]" /> : <Upload className="w-6 h-6" />}
               </div>
 
               <h4 className="text-sm font-bold text-white mb-1">
                 {parsing ? 'Сканирование и Распознавание...' : 'Перетащите Файлы Счетов Сюда'}
               </h4>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <p className="text-xs text-[#94a3b8] max-w-sm mx-auto">
                 Поддерживаются пакеты CSV, JSON или сканы изображений (PNG, JPG) с поддержкой ИИ
               </p>
 
-              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950 border border-white/10 text-[10px] font-mono text-sky-300">
-                <Sparkles className="w-3 h-3 text-emerald-400" /> На базе Gemini AI Vision
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0c1324] border border-[#424754] text-[10px] font-mono text-[#adc6ff]">
+                <Sparkles className="w-3 h-3 text-[#4edea3]" /> На базе Gemini AI Vision
               </div>
             </div>
 
             {parseError && (
-              <div className="p-3 bg-rose-500/15 border border-rose-500/30 rounded-2xl flex items-center gap-2 text-xs text-rose-300 font-mono">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <div className="p-3 bg-[#f43f5e]/15 border border-[#f43f5e]/30 rounded-2xl flex items-center gap-2 text-xs text-[#f43f5e]">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{parseError}</span>
               </div>
             )}
@@ -369,67 +370,67 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
 
         {/* Manual Form Tab */}
         {activeTab === 'manual' && (
-          <form onSubmit={handleAddManualItem} className="space-y-4 font-mono">
+          <form onSubmit={handleAddManualItem} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">Период (ГГГГ-ММ)</label>
+                <label className="block text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Период (ГГГГ-ММ)</label>
                 <input
                   type="text"
                   required
                   value={manualPeriod}
                   onChange={(e) => setManualPeriod(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-[#151b2d] border border-[#424754] rounded-xl px-3 py-2 text-xs font-mono text-white"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">Дата Счета</label>
+                <label className="block text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Дата Счета</label>
                 <input
                   type="text"
                   required
                   value={manualBillDate}
                   onChange={(e) => setManualBillDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-[#151b2d] border border-[#424754] rounded-xl px-3 py-2 text-xs font-mono text-white"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">Срок Оплаты</label>
+                <label className="block text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Срок Оплаты</label>
                 <input
                   type="text"
                   required
                   value={manualDueDate}
                   onChange={(e) => setManualDueDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-[#151b2d] border border-[#424754] rounded-xl px-3 py-2 text-xs font-mono text-white"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">Расход (кВт·ч)</label>
+                <label className="block text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Расход (кВт·ч)</label>
                 <input
                   type="number"
                   required
                   value={manualKwh}
                   onChange={(e) => setManualKwh(Number(e.target.value))}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-[#151b2d] border border-[#424754] rounded-xl px-3 py-2 text-xs font-mono text-white"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">Тариф (TL/кВт·ч)</label>
+                <label className="block text-[10px] font-bold uppercase text-[#94a3b8] mb-1">Тариф (TL/кВт·ч)</label>
                 <input
                   type="number"
                   step="0.001"
                   required
                   value={manualRate}
                   onChange={(e) => setManualRate(Number(e.target.value))}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-[#151b2d] border border-[#424754] rounded-xl px-3 py-2 text-xs font-mono text-white"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-[#adc6ff] text-[#001a42] text-xs font-bold hover:bg-white transition-all flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               <span>Добавить в Очередь Импорта</span>
@@ -439,14 +440,14 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
 
         {/* Preview / Staged Queue List */}
         {stagedInvoices.length > 0 && (
-          <div className="mt-6 pt-6 border-t border-white/10 space-y-4 font-mono">
+          <div className="mt-6 pt-6 border-t border-[#424754] space-y-4">
             <div className="flex justify-between items-center">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-sky-400">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#adc6ff]">
                 Готово к Импорту ({stagedInvoices.length} Счетов)
               </h4>
               <button
                 onClick={() => setStagedInvoices([])}
-                className="text-[10px] text-rose-400 hover:underline cursor-pointer"
+                className="text-[10px] text-[#f43f5e] hover:underline"
               >
                 Очистить Очередь
               </button>
@@ -456,21 +457,21 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
               {stagedInvoices.map((inv) => (
                 <div
                   key={inv.id}
-                  className="p-3 bg-slate-900 border border-white/5 rounded-2xl flex items-center justify-between text-xs font-mono"
+                  className="p-3 bg-[#151b2d] border border-[#424754] rounded-2xl flex items-center justify-between text-xs font-mono"
                 >
                   <div className="flex items-center gap-3">
-                    <Zap className="w-4 h-4 text-emerald-400" />
+                    <Zap className="w-4 h-4 text-[#4edea3]" />
                     <div>
                       <span className="font-bold text-white mr-3">{inv.period}</span>
-                      <span className="text-slate-400">{inv.kwh} кВт·ч по {inv.unit_rate_tl} TL</span>
+                      <span className="text-[#94a3b8]">{inv.kwh} кВт·ч по {inv.unit_rate_tl} TL</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-sky-400">{formatTL(inv.total_amount_tl)} TL</span>
+                    <span className="font-bold text-[#adc6ff]">{inv.total_amount_tl.toLocaleString('ru-RU')} TL</span>
                     <button
                       onClick={() => handleRemoveStagedItem(inv.id)}
-                      className="p-1 rounded text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                      className="p-1 rounded text-[#f43f5e] hover:bg-[#f43f5e]/10"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -481,7 +482,7 @@ export const InvoiceImportModal: React.FC<InvoiceImportModalProps> = ({
 
             <button
               onClick={handleConfirmImport}
-              className="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 rounded-2xl bg-[#4edea3] text-[#002113] text-xs font-bold hover:bg-[#6ffbbe] transition-all shadow-lg shadow-[#4edea3]/20 flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Подтвердить и Импортировать {stagedInvoices.length} Счетов</span>

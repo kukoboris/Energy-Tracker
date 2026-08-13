@@ -6,10 +6,10 @@ import {
   CheckCircle2, 
   Lock, 
   Share2, 
-  Search
+  Search,
+  Zap
 } from 'lucide-react';
 import { Invoice } from '../types';
-import { formatTL, formatKWh } from '../utils/formatters';
 
 interface GoogleSheetViewProps {
   invoices: Invoice[];
@@ -17,7 +17,7 @@ interface GoogleSheetViewProps {
 
 export const GoogleSheetView: React.FC<GoogleSheetViewProps> = ({ invoices }) => {
   const [syncing, setSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState('Только что');
+  const [lastSyncTime, setLastSyncTime] = useState('Just now');
   const [searchTerm, setSearchTerm] = useState('');
 
   const sheetUrl = 'https://docs.google.com/spreadsheets/d/1bpvsP4vqHut-g9qBGUIIz-x17DSIlpIwmU6Dcg4U2Co/edit';
@@ -27,7 +27,7 @@ export const GoogleSheetView: React.FC<GoogleSheetViewProps> = ({ invoices }) =>
     setTimeout(() => {
       setSyncing(false);
       setLastSyncTime(new Date().toLocaleTimeString());
-    }, 1000);
+    }, 1200);
   };
 
   const filtered = invoices.filter(i => 
@@ -41,11 +41,11 @@ export const GoogleSheetView: React.FC<GoogleSheetViewProps> = ({ invoices }) =>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <FileSpreadsheet className="w-8 h-8 text-emerald-400" />
+            <FileSpreadsheet className="w-8 h-8 text-[#4edea3]" />
             Интеграция с Google Таблицами
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-mono">
-            Синхронизация с облачной таблицей в реальном времени <span className="text-sky-400">1bpvsP4vqHut-g9qBGUIIz-x17DSIlpIwmU6Dcg4U2Co</span>
+          <p className="text-xs text-[#94a3b8] mt-1">
+            Синхронизация с облачной таблицей в реальном времени <span className="font-mono text-[#adc6ff]">1bpvsP4vqHut-g9qBGUIIz-x17DSIlpIwmU6Dcg4U2Co</span>
           </p>
         </div>
 
@@ -53,7 +53,7 @@ export const GoogleSheetView: React.FC<GoogleSheetViewProps> = ({ invoices }) =>
           <button
             onClick={handleManualSync}
             disabled={syncing}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sky-400 text-xs font-bold hover:bg-slate-800 transition-all disabled:opacity-50 cursor-pointer font-mono"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#191f31] border border-[#424754] text-[#adc6ff] text-xs font-bold hover:bg-[#1f2d42] transition-all disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
             <span>Синхронизировать</span>
@@ -63,7 +63,7 @@ export const GoogleSheetView: React.FC<GoogleSheetViewProps> = ({ invoices }) =>
             href={sheetUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-md font-mono"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#4edea3] text-[#002113] text-xs font-bold hover:bg-[#6ffbbe] transition-all shadow-md"
           >
             <ExternalLink className="w-4 h-4" />
             <span>Открыть в Google Таблицах</span>
@@ -72,45 +72,45 @@ export const GoogleSheetView: React.FC<GoogleSheetViewProps> = ({ invoices }) =>
       </div>
 
       {/* Sync Status Banner */}
-      <div className="glass-card p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex flex-wrap items-center justify-between gap-4">
+      <div className="glass-card p-5 rounded-2xl bg-[#4edea3]/5 border-[#4edea3]/20 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-[#4edea3]/20 text-[#4edea3] flex items-center justify-center">
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
             <p className="text-xs font-bold text-white">Облачная Таблица Синхронизирована</p>
-            <p className="text-[10px] text-slate-400">Все 19 записей дублируются в реальном времени. Последняя синхронизация: {lastSyncTime}</p>
+            <p className="text-[10px] text-[#94a3b8]">Все 19 записей дублируются в реальном времени. Последняя синхронизация: {lastSyncTime}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-xs font-mono text-slate-400">
+        <div className="flex items-center gap-4 text-xs font-mono text-[#94a3b8]">
           <span className="flex items-center gap-1">
-            <Lock className="w-3.5 h-3.5 text-emerald-400" /> Чтение / Запись API
+            <Lock className="w-3.5 h-3.5 text-[#4edea3]" /> Чтение / Запись API
           </span>
           <span className="flex items-center gap-1">
-            <Share2 className="w-3.5 h-3.5 text-sky-400" /> Авто-Обновление
+            <Share2 className="w-3.5 h-3.5 text-[#adc6ff]" /> Авто-Обновление
           </span>
         </div>
       </div>
 
       {/* Embedded Grid Viewer */}
       <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-white/5 bg-slate-950/80 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="p-4 border-b border-[#424754] bg-[#151b2d] flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-            <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-            <span className="text-xs font-mono text-slate-400 ml-2">Enerji_Pro_Master_Database.xlsx</span>
+            <div className="w-3 h-3 rounded-full bg-[#f43f5e]"></div>
+            <div className="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
+            <div className="w-3 h-3 rounded-full bg-[#4edea3]"></div>
+            <span className="text-xs font-mono text-[#94a3b8] ml-2">Enerji_Pro_Master_Database.xlsx</span>
           </div>
 
           <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Поиск по строкам таблицы..."
-              className="w-full bg-slate-900 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white font-mono placeholder:text-slate-500"
+              placeholder="Search sheet..."
+              className="w-full bg-[#0c1324] border border-[#424754] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white font-mono"
             />
           </div>
         </div>
@@ -118,32 +118,32 @@ export const GoogleSheetView: React.FC<GoogleSheetViewProps> = ({ invoices }) =>
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-900 text-[10px] font-bold text-slate-400 font-mono border-b border-white/5">
-                <th className="py-2.5 px-4 border-r border-white/5 text-center w-12">#</th>
-                <th className="py-2.5 px-4 border-r border-white/5">A: PERIOD</th>
-                <th className="py-2.5 px-4 border-r border-white/5">B: BILL_DATE</th>
-                <th className="py-2.5 px-4 border-r border-white/5">C: DUE_DATE</th>
-                <th className="py-2.5 px-4 border-r border-white/5">D: KWH_USAGE</th>
-                <th className="py-2.5 px-4 border-r border-white/5">E: UNIT_RATE_TL</th>
-                <th className="py-2.5 px-4 border-r border-white/5">F: NET_ENERGY_TL</th>
+              <tr className="bg-[#191f31] text-[10px] font-bold text-[#94a3b8] font-mono border-b border-[#424754]">
+                <th className="py-2.5 px-4 border-r border-[#424754] text-center w-12">#</th>
+                <th className="py-2.5 px-4 border-r border-[#424754]">A: PERIOD</th>
+                <th className="py-2.5 px-4 border-r border-[#424754]">B: BILL_DATE</th>
+                <th className="py-2.5 px-4 border-r border-[#424754]">C: DUE_DATE</th>
+                <th className="py-2.5 px-4 border-r border-[#424754]">D: KWH_USAGE</th>
+                <th className="py-2.5 px-4 border-r border-[#424754]">E: UNIT_RATE_TL</th>
+                <th className="py-2.5 px-4 border-r border-[#424754]">F: NET_ENERGY_TL</th>
                 <th className="py-2.5 px-4">G: TOTAL_BILL_TL</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 font-mono text-xs">
+            <tbody className="divide-y divide-[#424754]/50 font-mono text-xs">
               {filtered.map((inv, index) => (
-                <tr key={inv.id} className="hover:bg-sky-500/5 transition-colors">
-                  <td className="py-2.5 px-4 border-r border-white/5 text-center text-slate-400 bg-slate-900/40">
+                <tr key={inv.id} className="hover:bg-[#adc6ff]/5 transition-colors">
+                  <td className="py-2.5 px-4 border-r border-[#424754]/50 text-center text-[#94a3b8] bg-[#151b2d]/30">
                     {index + 2}
                   </td>
-                  <td className="py-2.5 px-4 border-r border-white/5 font-bold text-white">{inv.period}</td>
-                  <td className="py-2.5 px-4 border-r border-white/5 text-slate-400">{inv.bill_date}</td>
-                  <td className="py-2.5 px-4 border-r border-white/5 text-slate-400">{inv.due_date}</td>
-                  <td className="py-2.5 px-4 border-r border-white/5 text-sky-300 font-bold">
-                    {formatTL(inv.kwh)}
+                  <td className="py-2.5 px-4 border-r border-[#424754]/50 font-bold text-white">{inv.period}</td>
+                  <td className="py-2.5 px-4 border-r border-[#424754]/50 text-[#94a3b8]">{inv.bill_date}</td>
+                  <td className="py-2.5 px-4 border-r border-[#424754]/50 text-[#94a3b8]">{inv.due_date}</td>
+                  <td className="py-2.5 px-4 border-r border-[#424754]/50 text-[#adc6ff] font-bold">
+                    {inv.kwh.toLocaleString('ru-RU')}
                   </td>
-                  <td className="py-2.5 px-4 border-r border-white/5 text-slate-400">{inv.unit_rate_tl.toFixed(4)}</td>
-                  <td className="py-2.5 px-4 border-r border-white/5 text-slate-400">{formatTL(inv.net_amount_tl)}</td>
-                  <td className="py-2.5 px-4 font-bold text-emerald-400">{formatTL(inv.total_amount_tl)} TL</td>
+                  <td className="py-2.5 px-4 border-r border-[#424754]/50 text-[#94a3b8]">{inv.unit_rate_tl.toFixed(4)}</td>
+                  <td className="py-2.5 px-4 border-r border-[#424754]/50 text-[#94a3b8]">{Math.round(inv.net_amount_tl).toLocaleString('ru-RU')}</td>
+                  <td className="py-2.5 px-4 font-bold text-[#4edea3]">{inv.total_amount_tl.toLocaleString('ru-RU')} TL</td>
                 </tr>
               ))}
             </tbody>

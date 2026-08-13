@@ -1,7 +1,6 @@
 import React from 'react';
-import { X, Printer, CheckCircle, Clock, Zap, FileCheck } from 'lucide-react';
+import { X, Printer, Download, CheckCircle, Clock, Zap, Building, FileCheck } from 'lucide-react';
 import { Invoice, UserAccount } from '../types';
-import { formatTL, formatUSD, formatEUR, formatKWh } from '../utils/formatters';
 
 interface InvoiceDetailModalProps {
   invoice: Invoice;
@@ -25,24 +24,24 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="glass-card bg-slate-950 border border-white/10 rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      <div className="glass-card bg-[#0c1324] border border-[#424754] rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 p-2 rounded-full bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+          className="absolute right-6 top-6 p-2 rounded-full bg-[#191f31] border border-[#424754] text-[#94a3b8] hover:text-white hover:bg-[#1f2d42] transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="border-b border-white/10 pb-6 mb-6">
+        <div className="border-b border-[#424754] pb-6 mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 to-emerald-400 flex items-center justify-center text-slate-950 shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#adc6ff] to-[#4cd7f6] flex items-center justify-center text-[#001a42] shadow-md">
               <Zap className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
               <h2 className="text-xl font-extrabold text-white">КВИТАНЦИЯ ОБ ЭЛЕКТРОЭНЕРГИИ</h2>
-              <p className="text-[11px] font-mono text-sky-400">
+              <p className="text-[11px] font-mono text-[#adc6ff]">
                 ID Документа: {invoice.id.toUpperCase()} • Период: {invoice.period}
               </p>
             </div>
@@ -50,77 +49,72 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
         </div>
 
         {/* Bill Metadata Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-900/80 rounded-2xl border border-white/5 mb-6 font-mono text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#151b2d] rounded-2xl border border-[#424754] mb-6 font-mono text-xs">
           <div>
-            <span className="text-[10px] text-slate-400 uppercase block">Дата Счета</span>
+            <span className="text-[10px] text-[#94a3b8] uppercase block">Дата Счета</span>
             <span className="font-bold text-white">{invoice.bill_date}</span>
           </div>
           <div>
-            <span className="text-[10px] text-slate-400 uppercase block">Срок Оплаты</span>
-            <span className="font-bold text-sky-400">{invoice.due_date}</span>
+            <span className="text-[10px] text-[#94a3b8] uppercase block">Срок Оплаты</span>
+            <span className="font-bold text-[#adc6ff]">{invoice.due_date}</span>
           </div>
           <div>
-            <span className="text-[10px] text-slate-400 uppercase block">№ Счетчика</span>
+            <span className="text-[10px] text-[#94a3b8] uppercase block">№ Счетчика</span>
             <span className="font-bold text-white">{account.meterNumber}</span>
           </div>
           <div>
-            <span className="text-[10px] text-slate-400 uppercase block">Тариф</span>
-            <span className="font-bold text-emerald-400">{account.tariff}</span>
+            <span className="text-[10px] text-[#94a3b8] uppercase block">Тариф</span>
+            <span className="font-bold text-[#4edea3]">{account.tariff}</span>
           </div>
         </div>
 
         {/* Customer Address Info */}
-        <div className="p-4 bg-slate-900/40 rounded-2xl border border-white/5 mb-6 space-y-1">
+        <div className="p-4 bg-[#191f31]/60 rounded-2xl border border-white/5 mb-6 space-y-1">
           <p className="text-xs font-bold text-white">{account.name}</p>
-          <p className="text-xs text-slate-400">{account.address}</p>
-          <p className="text-xs text-slate-400">{account.city}</p>
+          <p className="text-xs text-[#94a3b8]">{account.address}</p>
+          <p className="text-xs text-[#94a3b8]">{account.city}</p>
         </div>
 
         {/* Itemized Calculation Table */}
         <div className="space-y-3 mb-6">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Детализация Начислений</h3>
+          <h3 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Детализация Начислений</h3>
           
           <div className="space-y-2 font-mono text-xs">
-            <div className="flex justify-between py-2 border-b border-white/5">
-              <span className="text-slate-300">
-                Активная Энергия ({formatKWh(invoice.kwh)} по {invoice.unit_rate_tl.toFixed(4)} TL)
+            <div className="flex justify-between py-2 border-b border-[#424754]/50">
+              <span className="text-[#dce1fb]">
+                Активная Энергия ({invoice.kwh.toLocaleString('ru-RU')} кВт·ч по {invoice.unit_rate_tl.toFixed(4)} TL)
               </span>
-              <span className="font-bold text-white">{formatTL(net)} TL</span>
+              <span className="font-bold text-white">{net.toLocaleString('ru-RU')} TL</span>
             </div>
 
-            <div className="flex justify-between py-2 border-b border-white/5">
-              <span className="text-slate-400">Среднесуточное Потребление</span>
+            <div className="flex justify-between py-2 border-b border-[#424754]/50">
+              <span className="text-[#94a3b8]">Среднесуточное Потребление</span>
               <span className="text-white">{invoice.daily_avg_kwh} кВт·ч/день</span>
             </div>
 
-            <div className="flex justify-between py-2 border-b border-white/5">
-              <span className="text-slate-400">Распределение и Налоги (12%)</span>
-              <span className="text-white">{formatTL(tax)} TL</span>
+            <div className="flex justify-between py-2 border-b border-[#424754]/50">
+              <span className="text-[#94a3b8]">Распределение и Налоги (12%)</span>
+              <span className="text-white">{tax.toLocaleString('ru-RU')} TL</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between py-3 text-sm font-bold pt-2 border-t border-white/10">
+            <div className="flex justify-between py-3 text-sm font-bold pt-2">
               <span className="text-white">ИТОГО К ОПЛАТЕ</span>
-              <div className="text-right">
-                <span className="text-2xl text-sky-400 font-mono">
-                  {formatTL(invoice.total_amount_tl)} TL
-                </span>
-                <span className="text-xs text-slate-400 font-mono block">
-                  ≈ {formatUSD(invoice.total_amount_tl)} • {formatEUR(invoice.total_amount_tl)}
-                </span>
-              </div>
+              <span className="text-xl text-[#adc6ff]">
+                {invoice.total_amount_tl.toLocaleString('ru-RU')} TL
+              </span>
             </div>
           </div>
         </div>
 
         {/* Status & Actions Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/10 font-mono">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#424754]">
           <div className="flex items-center gap-2">
             {invoice.status === 'PAID' ? (
-              <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold flex items-center gap-1.5 border border-emerald-500/20">
+              <span className="px-3 py-1.5 rounded-full bg-[#4edea3]/15 text-[#4edea3] text-xs font-bold flex items-center gap-1.5 border border-[#4edea3]/30">
                 <CheckCircle className="w-4 h-4" /> Счет Оплачен
               </span>
             ) : (
-              <span className="px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold flex items-center gap-1.5 border border-amber-500/20">
+              <span className="px-3 py-1.5 rounded-full bg-[#f59e0b]/15 text-[#f59e0b] text-xs font-bold flex items-center gap-1.5 border border-[#f59e0b]/30">
                 <Clock className="w-4 h-4" /> Ожидает Оплаты
               </span>
             )}
@@ -129,9 +123,9 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-200 text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#191f31] border border-[#424754] text-[#adc6ff] text-xs font-bold hover:bg-[#1f2d42] transition-colors"
             >
-              <Printer className="w-4 h-4 text-sky-400" />
+              <Printer className="w-4 h-4" />
               <span>Печать / PDF</span>
             </button>
 
@@ -141,10 +135,10 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                   onPayInvoice(invoice.id);
                   onClose();
                 }}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#4edea3] text-[#002113] text-xs font-bold hover:bg-[#6ffbbe] transition-all shadow-md"
               >
                 <FileCheck className="w-4 h-4" />
-                <span>Оплатить {formatTL(invoice.total_amount_tl)} TL</span>
+                <span>Оплатить {invoice.total_amount_tl.toLocaleString('ru-RU')} TL</span>
               </button>
             )}
           </div>
