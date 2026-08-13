@@ -6,26 +6,23 @@ import {
   TrendingUp,
   Calculator,
   Sparkles,
-  Radar,
   Wallet,
   Receipt,
-  Table,
-  ChevronDown,
   MapPin,
-  Search,
+  FileDown,
+  Sun,
+  Snowflake,
+  Leaf,
+  Layers,
+  BarChart3,
+  Calendar,
+  CheckCircle2,
   SlidersHorizontal,
-  FileDown
+  FileCheck,
+  ChevronRight,
+  ShieldCheck,
+  Flame
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  LineChart as RechartsLineChart,
-  Line as RechartsLine,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend as RechartsLegend,
-} from 'recharts';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -33,39 +30,17 @@ import {
   BarElement,
   PointElement,
   LineElement,
-  RadialLinearScale,
   Title,
   Tooltip,
   Legend,
   Filler
 } from 'chart.js';
-import { Bar, Line, Radar as RadarChart } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { Invoice, UserAccount } from '../types';
-
-const CustomRechartsTooltip = ({ active, payload, label, unit }: { active?: boolean; payload?: any[]; label?: string; unit?: string }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#161e2e]/95 backdrop-blur-md border border-[#adc6ff]/20 p-3 rounded-xl shadow-2xl text-xs font-sans">
-        <p className="font-bold text-white mb-2 pb-1 border-b border-white/10">{label} Consumption</p>
-        {payload.map((entry: any, index: number) => {
-          if (entry.value === null || entry.value === undefined) return null;
-          return (
-            <div key={`item-${index}`} className="flex items-center justify-between gap-4 py-1">
-              <span className="flex items-center gap-1.5 font-medium" style={{ color: entry.color }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                {entry.name}:
-              </span>
-              <span className="font-mono font-bold text-white ml-2">
-                {Number(entry.value).toLocaleString('ru-RU')} {unit}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-  return null;
-};
+import { AiForecastCard } from './AiForecastCard';
+import { KemerWeatherCard } from './KemerWeatherCard';
+import { WhatIfSimulator } from './WhatIfSimulator';
+import { formatTL, formatUSD, formatEUR, formatKWh } from '../utils/formatters';
 
 ChartJS.register(
   CategoryScale,
@@ -73,7 +48,6 @@ ChartJS.register(
   BarElement,
   PointElement,
   LineElement,
-  RadialLinearScale,
   Title,
   Tooltip,
   Legend,
@@ -87,61 +61,37 @@ interface DashboardViewProps {
   onNavigateToInvoices: () => void;
 }
 
+type HubTab = 'YOY' | 'CLIMATE' | 'TARIFF_PHASES' | 'AI_FORECAST';
+
 export const DashboardView: React.FC<DashboardViewProps> = ({
   account,
   invoices,
   onSelectInvoice,
   onNavigateToInvoices
 }) => {
-  const [isRegistryOpen, setIsRegistryOpen] = useState(false);
-  const [tableYearFilter, setTableYearFilter] = useState<'ALL' | '2026' | '2025'>('ALL');
-  const [tableSearch, setTableSearch] = useState('');
-  
-  // Interactive Forecast Simulation state
-  const [acIntensity, setAcIntensity] = useState<number>(100); // % of default
-  const [trendMetric, setTrendMetric] = useState<'KWH' | 'COST'>('KWH');
+  const [hubTab, setHubTab] = useState<HubTab>('YOY');
 
-  // Compute monthly data for Recharts line chart from invoices
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const rechartsMonthlyData = monthNames.map((monthStr, index) => {
-    const monthNumStr = String(index + 1).padStart(2, '0');
-    const inv2025 = invoices.find(i => i.period === `2025-${monthNumStr}`);
-    const inv2026 = invoices.find(i => i.period === `2026-${monthNumStr}`);
-    return {
-      month: monthStr,
-      '2025 Baseline': inv2025 ? (trendMetric === 'KWH' ? inv2025.kwh : inv2025.total_amount_tl) : null,
-      '2026 Actual': inv2026 ? (trendMetric === 'KWH' ? inv2026.kwh : inv2026.total_amount_tl) : null,
-    };
-  });
-
-  // Chart Labels & Data
+  // Chart data for 2025 vs 2026 YoY
   const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
   const data2025 = [735, 647, 361, 242, 251, 378, 1181];
   const data2026 = [1511, 939, 756, 281, 143, 288, 1133];
 
-  // Calculated Forecast based on slider
-  const estMinKwh = Math.round(1150 * (acIntensity / 100));
-  const estMaxKwh = Math.round(1250 * (acIntensity / 100));
-  const estMinTl = Math.round(estMinKwh * 5.69 * 1.12);
-  const estMaxTl = Math.round(estMaxKwh * 5.69 * 1.12);
-
-  // 1. Bar Chart Data (kWh YoY)
   const barChartData = {
-    labels,
+    labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл'],
     datasets: [
       {
-        label: '2025',
+        label: '2025 Базовый',
         data: data2025,
-        backgroundColor: 'rgba(148, 163, 184, 0.25)',
-        borderRadius: 8,
-        barThickness: 12,
+        backgroundColor: 'rgba(148, 163, 184, 0.3)',
+        borderRadius: 6,
+        barThickness: 14,
       },
       {
-        label: '2026',
+        label: '2026 Текущий',
         data: data2026,
-        backgroundColor: '#adc6ff',
-        borderRadius: 8,
-        barThickness: 12,
+        backgroundColor: '#38bdf8',
+        borderRadius: 6,
+        barThickness: 14,
       },
     ],
   };
@@ -152,18 +102,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#161e2e',
+        backgroundColor: '#0f172a',
         titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' as const },
         bodyFont: { family: 'JetBrains Mono', size: 11 },
         padding: 10,
-        borderColor: 'rgba(173, 198, 255, 0.2)',
+        borderColor: 'rgba(56, 189, 248, 0.2)',
         borderWidth: 1,
       }
     },
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 10, weight: 600 } },
+        ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11, weight: 600 } },
       },
       y: {
         grid: { color: 'rgba(255,255,255,0.05)' },
@@ -172,641 +122,640 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     },
   };
 
-  // 2. Trend Line Data (2026 dynamics)
-  const lineChartData = {
-    labels,
-    datasets: [
-      {
-        label: '2026 Total (TL)',
-        data: [8945, 4720, 3535, 1290, 695, 1400, 7185],
-        borderColor: '#adc6ff',
-        borderWidth: 3,
-        fill: true,
-        backgroundColor: (context: any) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-          gradient.addColorStop(0, 'rgba(173, 198, 255, 0.3)');
-          gradient.addColorStop(1, 'rgba(173, 198, 255, 0.0)');
-          return gradient;
-        },
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-        pointHoverBackgroundColor: '#adc6ff',
-      },
-    ],
-  };
-
-  const lineChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 10 } },
-      },
-      y: { display: false },
-    },
-  };
-
-  // 3. Radar Chart Data
-  const radarChartData = {
-    labels,
-    datasets: [
-      {
-        label: '2025',
-        data: data2025,
-        borderColor: 'rgba(148, 163, 184, 0.4)',
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-      },
-      {
-        label: '2026',
-        data: data2026,
-        borderColor: '#8b5cf6',
-        backgroundColor: 'rgba(139, 92, 246, 0.15)',
-        borderWidth: 2,
-      },
-    ],
-  };
-
-  const radarChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      r: {
-        grid: { color: 'rgba(255,255,255,0.06)' },
-        angleLines: { color: 'rgba(255,255,255,0.06)' },
-        ticks: { display: false },
-        pointLabels: {
-          color: '#dce1fb',
-          font: { family: 'Plus Jakarta Sans', size: 9, weight: 700 as const }
-        }
-      }
-    }
-  };
-
-  // Filtered Table Data
-  const filteredInvoices = invoices.filter((inv) => {
-    const matchesYear = tableYearFilter === 'ALL' || inv.period.startsWith(tableYearFilter);
-    const matchesSearch = inv.period.toLowerCase().includes(tableSearch.toLowerCase()) ||
-      inv.bill_date.includes(tableSearch);
-    return matchesYear && matchesSearch;
-  });
+  // Latest invoice (July 2026)
+  const latestInvoice = invoices.find(i => i.period === '2026-07') || invoices[invoices.length - 1];
 
   return (
     <div className="space-y-8">
-      {/* Profile Header Bento Block */}
+      {/* ========================================================================= */}
+      {/* TIER 1: HERO PORTFOLIO HEADER & 4 TOP METRIC CARDS */}
+      {/* ========================================================================= */}
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        whileHover={{ y: -3, transition: { duration: 0.25, ease: 'easeOut' } }}
-        className="glass-card p-6 sm:p-8 rounded-[2rem] relative group"
+        transition={{ duration: 0.35 }}
+        className="glass-card p-6 sm:p-8 rounded-[2rem] relative"
       >
-        <div className="absolute -right-20 -top-20 w-80 h-80 bg-[#adc6ff]/10 rounded-full blur-[100px] pointer-events-none transition-all duration-500 group-hover:bg-[#adc6ff]/15"></div>
-        
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2.5">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                Enerji Portfolio Overview
+                Обзор Энергетического Портфеля
               </h1>
-              <span className="px-3 py-1 rounded-full bg-[#adc6ff]/10 border border-[#adc6ff]/20 text-[#adc6ff] text-[10px] font-bold uppercase tracking-widest">
-                Premium Analytics
+              <span className="px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[10px] font-bold uppercase tracking-widest font-mono">
+                Вилла • Кемер
               </span>
             </div>
             
             <div className="flex flex-col gap-1">
-              <span className="text-[#94a3b8] text-xs sm:text-sm flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#adc6ff]" />
+              <span className="text-slate-400 text-xs sm:text-sm flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
                 {account.address}, {account.city}
               </span>
-              <div className="flex gap-2 sm:gap-3 mt-2">
-                <span className="text-[11px] font-bold py-1 px-3 bg-[#4cd7f6]/10 text-[#4cd7f6] border border-[#4cd7f6]/20 rounded-md font-mono">
+              <div className="flex gap-2 sm:gap-3 mt-1.5 font-mono text-[11px]">
+                <span className="font-bold py-1 px-3 bg-sky-500/10 text-sky-300 border border-sky-500/20 rounded-md">
                   {account.tariff}
                 </span>
-                <span className="text-[11px] font-bold py-1 px-3 bg-[#8b5cf6]/10 text-[#8b5cf6] border border-[#8b5cf6]/20 rounded-md font-mono">
-                  {account.engine}
+                <span className="font-bold py-1 px-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md">
+                  Счетчик № {account.meterNumber}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="px-5 py-3.5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md">
-              <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mb-1">
-                Total Consumption 2025
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 font-mono">
+            <div className="px-4 py-3 rounded-2xl bg-slate-900/60 border border-white/5">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Расход 2025 (Год)
               </p>
-              <p className="text-xl sm:text-2xl font-bold font-mono text-white">
-                {account.totalConsumption2025Tl.toLocaleString('ru-RU')} <span className="text-xs font-normal text-[#94a3b8]">TL</span>
+              <p className="text-xl font-bold text-slate-200">
+                {formatTL(account.totalConsumption2025Tl)} <span className="text-xs text-slate-400 font-normal">TL</span>
               </p>
-              <p className="text-[11px] font-mono text-[#94a3b8] mt-0.5">
-                {account.totalConsumption2025Kwh.toLocaleString('ru-RU')} kWh
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                {formatTL(account.totalConsumption2025Kwh)} кВт·ч
               </p>
             </div>
 
-            <div className="px-5 py-3.5 rounded-2xl bg-[#adc6ff]/5 border border-[#adc6ff]/20 backdrop-blur-md ring-1 ring-[#adc6ff]/20">
-              <p className="text-[10px] font-bold text-[#adc6ff] uppercase tracking-widest mb-1">
-                Total Consumption 2026
+            <div className="px-4 py-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 shadow-sm">
+              <p className="text-[10px] font-bold text-sky-300 uppercase tracking-wider mb-0.5">
+                Расход 2026 (7 мес)
               </p>
-              <p className="text-xl sm:text-2xl font-bold font-mono text-[#adc6ff]">
-                {account.totalConsumption2026Tl.toLocaleString('ru-RU')} <span className="text-xs font-normal text-[#94a3b8]">TL</span>
+              <p className="text-xl font-bold text-sky-300">
+                {formatTL(account.totalConsumption2026Tl)} <span className="text-xs text-sky-400 font-normal">TL</span>
               </p>
-              <p className="text-[11px] font-mono text-[#adc6ff]/70 mt-0.5">
-                {account.totalConsumption2026Kwh.toLocaleString('ru-RU')} kWh (7m)
+              <p className="text-[10px] text-sky-400/80 mt-0.5">
+                {formatTL(account.totalConsumption2026Kwh)} кВт·ч (≈ {formatUSD(account.totalConsumption2026Tl)})
               </p>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Main Bento Grid */}
+      {/* 4 Top KPI Cards */}
       <div className="bento-grid">
         {/* KPI 1: Current Bill */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.05 }}
-          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
-          whileTap={{ scale: 0.995 }}
-          className="glass-card glow-warning p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="glass-card p-5 sm:p-6 rounded-3xl flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
-              Current Bill (Jul)
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+              Текущий счет (Июль)
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[#f59e0b]/10 border border-[#f59e0b]/20 flex items-center justify-center text-[#f59e0b]">
-              <Clock className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div className="py-3">
-            <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
-              7 185 <span className="text-sm font-bold text-[#f59e0b]">TL</span>
-            </h3>
-            <p className="text-[11px] text-[#94a3b8] mt-1">
-              <span className="text-[#f59e0b] font-bold">+68.7%</span> vs July 2025
-            </p>
+          <div className="py-2">
+            <div className="flex items-baseline gap-1.5">
+              <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
+                {formatTL(latestInvoice.total_amount_tl)}
+              </h3>
+              <span className="text-sm font-bold text-amber-400 font-mono">TL</span>
+            </div>
+            <div className="text-xs font-mono text-slate-400 mt-1 flex items-center justify-between">
+              <span>≈ {formatUSD(latestInvoice.total_amount_tl)} • {formatEUR(latestInvoice.total_amount_tl)}</span>
+              <span className="text-amber-400 font-bold">+68.7% YoY</span>
+            </div>
           </div>
-          <div className="pt-3 border-t border-[#424754] flex justify-between items-center text-[10px] font-bold uppercase text-[#94a3b8] tracking-widest">
-            <span>Due Date</span>
-            <span className="text-white font-mono">07.08.2026</span>
+          <div className="pt-2.5 border-t border-white/5 flex justify-between items-center text-[10px] font-bold uppercase text-slate-400 tracking-wider font-mono">
+            <span>Срок оплаты</span>
+            <span className="text-white">{latestInvoice.due_date}</span>
           </div>
         </motion.div>
 
         {/* KPI 2: Consumption */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.1 }}
-          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
-          whileTap={{ scale: 0.995 }}
-          className="glass-card glow-primary p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="glass-card p-5 sm:p-6 rounded-3xl flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
-              Consumption (Jul)
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+              Расход (Июль)
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[#adc6ff]/10 border border-[#adc6ff]/20 flex items-center justify-center text-[#adc6ff]">
-              <Zap className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+              <Zap className="w-4 h-4" />
             </div>
           </div>
-          <div className="py-3">
-            <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
-              1 133.58 <span className="text-sm font-bold text-[#adc6ff]">kWh</span>
-            </h3>
-            <p className="text-[11px] text-[#94a3b8] mt-1">
-              <span className="text-[#4edea3] font-bold">-4.0%</span> vs July 2025
-            </p>
+          <div className="py-2">
+            <div className="flex items-baseline gap-1.5">
+              <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
+                {formatTL(latestInvoice.kwh)}
+              </h3>
+              <span className="text-sm font-bold text-sky-400 font-mono">кВт·ч</span>
+            </div>
+            <div className="text-xs font-mono text-slate-400 mt-1 flex items-center justify-between">
+              <span>Среднесуточный: {latestInvoice.daily_avg_kwh} кВт·ч</span>
+              <span className="text-emerald-400 font-bold">-4.0% YoY</span>
+            </div>
           </div>
-          <div className="pt-3 border-t border-[#424754] flex justify-between items-center text-[10px] font-bold uppercase text-[#94a3b8] tracking-widest">
-            <span>Daily Avg</span>
-            <span className="text-white font-mono">32.39 kWh</span>
+          <div className="pt-2.5 border-t border-white/5 flex justify-between items-center text-[10px] font-bold uppercase text-slate-400 tracking-wider font-mono">
+            <span>Сезон</span>
+            <span className="text-sky-300">Пик Охлаждения (AC)</span>
           </div>
         </motion.div>
 
         {/* KPI 3: YoY Volume Growth */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.15 }}
-          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
-          whileTap={{ scale: 0.995 }}
-          className="glass-card glow-info p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="glass-card p-5 sm:p-6 rounded-3xl flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
-              YTD Growth
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+              Рост YTD (7 мес)
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 flex items-center justify-center text-[#8b5cf6]">
-              <TrendingUp className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+              <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <div className="py-3">
-            <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
-              +20.3% <span className="text-sm font-bold text-[#8b5cf6]">kWh</span>
-            </h3>
-            <p className="text-[11px] text-[#94a3b8] mt-1">
-              5,055 vs 4,201 kWh (YTD)
-            </p>
+          <div className="py-2">
+            <div className="flex items-baseline gap-1.5">
+              <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
+                +20.3%
+              </h3>
+              <span className="text-sm font-bold text-sky-400 font-mono">кВт·ч</span>
+            </div>
+            <div className="text-xs font-mono text-slate-400 mt-1">
+              5 055 против 4 201 кВт·ч в 2025
+            </div>
           </div>
-          <div className="pt-3 border-t border-[#424754] flex justify-between items-center text-[10px] font-bold uppercase text-[#94a3b8] tracking-widest">
-            <span>Cost Diff</span>
-            <span className="text-[#f59e0b] font-mono">+145.7%</span>
+          <div className="pt-2.5 border-t border-white/5 flex justify-between items-center text-[10px] font-bold uppercase text-slate-400 tracking-wider font-mono">
+            <span>Дельта затрат</span>
+            <span className="text-amber-400 font-bold">+145.7% TL</span>
           </div>
         </motion.div>
 
         {/* KPI 4: Unit Rate */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.2 }}
-          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
-          whileTap={{ scale: 0.995 }}
-          className="glass-card glow-tertiary p-6 rounded-3xl flex flex-col justify-between cursor-pointer"
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="glass-card p-5 sm:p-6 rounded-3xl flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">
-              Avg kWh Price
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+              Тариф за кВт·ч
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[#4edea3]/10 border border-[#4edea3]/20 flex items-center justify-center text-[#4edea3]">
-              <Calculator className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Calculator className="w-4 h-4" />
             </div>
           </div>
-          <div className="py-3">
-            <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
-              5.69 <span className="text-sm font-bold text-[#4edea3]">TL</span>
-            </h3>
-            <p className="text-[11px] text-[#94a3b8] mt-1">
-              vs 2.79 TL/kWh in 2025
-            </p>
-          </div>
-          <div className="pt-3 border-t border-[#424754] flex justify-between items-center text-[10px] font-bold uppercase text-[#94a3b8] tracking-widest">
-            <span>Indexation</span>
-            <span className="text-[#f43f5e] font-mono">+104% YoY</span>
-          </div>
-        </motion.div>
-
-        {/* Chart Block: kWh YoY (Large Bento) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.25 }}
-          whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2, ease: 'easeOut' } }}
-          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2 bento-row-2"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Volume Trend YoY</h3>
-              <p className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-widest mt-0.5">
-                Jan – Jul Comparison (kWh)
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]/40"></span> 2025
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#adc6ff]">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#adc6ff]"></span> 2026
-              </div>
-            </div>
-          </div>
-          <div className="h-72 w-full">
-            <Bar data={barChartData} options={barChartOptions} />
-          </div>
-        </motion.div>
-
-        {/* Forecast Card (Tall Bento) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.3 }}
-          whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2, ease: 'easeOut' } }}
-          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bg-gradient-to-br from-[#adc6ff]/10 to-transparent border-[#adc6ff]/20 bento-row-2 flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="px-3 py-1 bg-[#adc6ff] text-[#001a42] rounded-full text-[10px] font-bold uppercase tracking-wider">
-                AI Forecast
-              </span>
-              <Sparkles className="w-5 h-5 text-[#adc6ff] animate-pulse" />
-            </div>
-            
-            <h4 className="text-[10px] font-bold text-[#adc6ff] uppercase tracking-widest mb-1">
-              August Prediction
-            </h4>
-            <p className="text-2xl sm:text-3xl font-extrabold font-mono text-white mb-6">
-              {estMinTl.toLocaleString('ru-RU')} – {estMaxTl.toLocaleString('ru-RU')} <span className="text-sm font-bold opacity-50">TL</span>
-            </p>
-
-            <div className="space-y-3 mb-4">
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5">
-                <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Est. Consumption</p>
-                <p className="text-base font-bold font-mono text-white">
-                  {estMinKwh.toLocaleString('ru-RU')} - {estMaxKwh.toLocaleString('ru-RU')} <span className="text-xs opacity-50">kWh</span>
-                </p>
-              </div>
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5">
-                <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Last Year (Aug)</p>
-                <p className="text-base font-bold font-mono text-[#94a3b8]">
-                  1,222 <span className="text-xs opacity-50">kWh</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Interactive AC Simulator Slider */}
-            <div className="pt-2 border-t border-white/10 space-y-2">
-              <div className="flex justify-between items-center text-[10px] font-bold uppercase text-[#adc6ff]">
-                <span>Climate Load (AC)</span>
-                <span>{acIntensity}%</span>
-              </div>
-              <input
-                type="range"
-                min="70"
-                max="140"
-                value={acIntensity}
-                onChange={(e) => setAcIntensity(Number(e.target.value))}
-                className="w-full accent-[#adc6ff] h-1 bg-[#191f31] rounded-lg cursor-pointer"
-              />
-            </div>
-          </div>
-
-          <p className="text-[11px] text-[#94a3b8] leading-relaxed pt-4 border-t border-white/5">
-            Calculated using seasonal patterns and current price indexation (5.69 TL/kWh).
-          </p>
-        </motion.div>
-
-        {/* Cost Radar (Bento Square) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.35 }}
-          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
-          className="glass-card glow-info p-6 sm:p-8 rounded-[2.5rem]"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Seasonality</h3>
-            <Radar className="w-4 h-4 text-[#8b5cf6]" />
-          </div>
-          <div className="h-44 w-full">
-            <RadarChart data={radarChartData} options={radarChartOptions} />
-          </div>
-        </motion.div>
-
-        {/* Monthly Energy Consumption Trends (Recharts) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.4 }}
-          whileHover={{ y: -5, scale: 1.01, transition: { duration: 0.2, ease: 'easeOut' } }}
-          className="glass-card p-6 sm:p-8 rounded-[2.5rem] bento-span-2 flex flex-col justify-between"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-[#adc6ff]" />
-                Monthly Consumption Trends
+          <div className="py-2">
+            <div className="flex items-baseline gap-1.5">
+              <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
+                5.69
               </h3>
-              <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-0.5">
-                Recharts YoY Comparison • {trendMetric === 'KWH' ? 'Volume (kWh)' : 'Cost (TL)'}
-              </p>
+              <span className="text-sm font-bold text-emerald-400 font-mono">TL</span>
             </div>
-
-            {/* Metric Mode Toggle */}
-            <div className="flex items-center gap-1 bg-[#161e2e]/80 p-1 rounded-xl border border-white/10 self-start sm:self-auto">
-              <button
-                onClick={() => setTrendMetric('KWH')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                  trendMetric === 'KWH'
-                    ? 'bg-[#adc6ff] text-[#001a42] shadow-md'
-                    : 'text-[#94a3b8] hover:text-white'
-                }`}
-              >
-                kWh Usage
-              </button>
-              <button
-                onClick={() => setTrendMetric('COST')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                  trendMetric === 'COST'
-                    ? 'bg-[#adc6ff] text-[#001a42] shadow-md'
-                    : 'text-[#94a3b8] hover:text-white'
-                }`}
-              >
-                TL Spend
-              </button>
+            <div className="text-xs font-mono text-slate-400 mt-1 flex items-center justify-between">
+              <span>≈ $0.14 / кВт·ч</span>
+              <span className="text-rose-400 font-bold">+104% YoY</span>
             </div>
           </div>
-
-          <div className="h-56 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsLineChart data={rechartsMonthlyData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.06)" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="#94a3b8" 
-                  tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'Plus Jakarta Sans' }} 
-                  tickLine={false} 
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} 
-                />
-                <YAxis 
-                  stroke="#94a3b8" 
-                  tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'JetBrains Mono' }} 
-                  tickLine={false} 
-                  axisLine={false} 
-                />
-                <RechartsTooltip content={<CustomRechartsTooltip unit={trendMetric === 'KWH' ? 'kWh' : 'TL'} />} />
-                <RechartsLegend 
-                  wrapperStyle={{ paddingTop: '10px', fontSize: '11px', color: '#94a3b8' }} 
-                />
-                <RechartsLine 
-                  type="monotone" 
-                  dataKey="2025 Baseline" 
-                  stroke="#94a3b8" 
-                  strokeWidth={2} 
-                  strokeDasharray="4 4" 
-                  dot={{ fill: '#94a3b8', r: 3 }} 
-                  activeDot={{ r: 6 }} 
-                  connectNulls
-                />
-                <RechartsLine 
-                  type="monotone" 
-                  dataKey="2026 Actual" 
-                  stroke="#adc6ff" 
-                  strokeWidth={3} 
-                  dot={{ fill: '#adc6ff', r: 4 }} 
-                  activeDot={{ r: 7, fill: '#60a5fa', stroke: '#ffffff', strokeWidth: 2 }} 
-                  connectNulls
-                />
-              </RechartsLineChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        {/* Mini Analytics: Daily Living Cost */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.45 }}
-          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
-          className="glass-card glow-warning p-6 rounded-3xl bg-gradient-to-br from-[#f59e0b]/5 to-transparent border-[#f59e0b]/10 flex flex-col justify-between"
-        >
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-[#f59e0b]/10 flex items-center justify-center text-[#f59e0b]">
-              <Wallet className="w-4 h-4" />
-            </div>
-            <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Daily Cost</span>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold font-mono text-white">231.8 <span className="text-xs font-normal text-[#94a3b8]">TL/day</span></h3>
-            <p className="text-[10px] text-[#94a3b8] mt-1">Peak Jul 2026 usage</p>
-          </div>
-        </motion.div>
-
-        {/* Mini Analytics: Taxes Paid */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.5 }}
-          whileHover={{ y: -6, scale: 1.015, transition: { duration: 0.2, ease: 'easeOut' } }}
-          className="glass-card glow-tertiary p-6 rounded-3xl bg-gradient-to-br from-[#4edea3]/5 to-transparent border-[#4edea3]/10 flex flex-col justify-between"
-        >
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-[#4edea3]/10 flex items-center justify-center text-[#4edea3]">
-              <Receipt className="w-4 h-4" />
-            </div>
-            <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Taxes Paid</span>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold font-mono text-white">3 336 <span className="text-xs font-normal text-[#94a3b8]">TL</span></h3>
-            <p className="text-[10px] text-[#4edea3] mt-1">11.6% of total YTD</p>
+          <div className="pt-2.5 border-t border-white/5 flex justify-between items-center text-[10px] font-bold uppercase text-slate-400 tracking-wider font-mono">
+            <span>База 2025</span>
+            <span className="text-slate-300">2.79 TL/кВт·ч</span>
           </div>
         </motion.div>
       </div>
 
-      {/* Invoice Registry Section */}
-      <div className="glass-card rounded-[2.5rem] overflow-hidden">
-        <div className="p-6 sm:p-8 border-b border-[#424754] flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/[0.02]">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#191f31] flex items-center justify-center text-[#adc6ff] shadow-inner">
-              <Table className="w-6 h-6" />
+      {/* ========================================================================= */}
+      {/* TIER 2: INTERACTIVE ANALYTICS HUB (PROJECTION TABS) */}
+      {/* ========================================================================= */}
+      <div className="space-y-4">
+        {/* Hub Tab Switcher Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              <Layers className="w-5 h-5 text-sky-400" />
+              Аналитический Центр Проекций
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Исследуйте энергопотребление с разных точек зрения
+            </p>
+          </div>
+
+          <div className="flex p-1 bg-slate-900/90 rounded-2xl border border-white/5 self-start sm:self-auto font-mono text-xs overflow-x-auto max-w-full">
+            {[
+              { id: 'YOY', label: 'Динамика YoY', icon: BarChart3 },
+              { id: 'CLIMATE', label: 'Погода и Климат', icon: Sun },
+              { id: 'TARIFF_PHASES', label: 'Фазы T1-T2-T3', icon: Wallet },
+              { id: 'AI_FORECAST', label: 'AI Прогноз', icon: Sparkles },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = hubTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setHubTab(tab.id as HubTab)}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-all cursor-pointer font-bold whitespace-nowrap ${
+                    isActive
+                      ? 'bg-sky-500 text-slate-950 shadow-md'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tab 1: YoY Dynamics */}
+        {hubTab === 'YOY' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+          >
+            {/* YoY Chart Card */}
+            <div className="lg:col-span-8 glass-card p-6 sm:p-8 rounded-[2rem] space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white tracking-tight">
+                    Сравнение Потребления по Месяцам (кВт·ч)
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 font-mono">
+                    2025 Базовый vs 2026 Фактический
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 text-[11px] font-mono">
+                  <span className="flex items-center gap-1.5 text-slate-400">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-slate-500/50" /> 2025
+                  </span>
+                  <span className="flex items-center gap-1.5 text-sky-400 font-bold">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-sky-400" /> 2026
+                  </span>
+                </div>
+              </div>
+
+              <div className="h-56 w-full">
+                <Bar data={barChartData} options={barChartOptions} />
+              </div>
+
+              {/* Monthly YoY Delta Grid */}
+              <div className="space-y-1.5 pt-2 border-t border-white/5">
+                <span className="text-[10px] font-mono font-bold uppercase text-slate-400 tracking-wider block">
+                  Динамика объемов по месяцам YoY (%):
+                </span>
+                <div className="grid grid-cols-7 gap-1.5 text-center font-mono">
+                  {[
+                    { m: 'Янв', diff: '+106%', isUp: true },
+                    { m: 'Фев', diff: '+45%', isUp: true },
+                    { m: 'Мар', diff: '+109%', isUp: true },
+                    { m: 'Апр', diff: '+16%', isUp: true },
+                    { m: 'Май', diff: '-43%', isUp: false },
+                    { m: 'Июн', diff: '-24%', isUp: false },
+                    { m: 'Июл', diff: '-4%', isUp: false },
+                  ].map((item, idx) => (
+                    <div 
+                      key={idx}
+                      className={`p-2 rounded-xl border text-[10px] space-y-0.5 ${
+                        item.isUp 
+                          ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
+                          : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-bold'
+                      }`}
+                    >
+                      <span className="text-[9px] font-bold text-slate-400 block">{item.m}</span>
+                      <span className="font-extrabold block">{item.diff}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* YoY Analytics Insights Side Card */}
+            <div className="lg:col-span-4 glass-card p-6 sm:p-8 rounded-[2rem] flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Ключевые Выводы YoY</h4>
+                    <span className="text-[10px] text-slate-400 font-mono">7 месяцев аудита</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 font-mono text-xs">
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <span className="text-[9px] text-slate-400 uppercase font-bold block">Зимний пик (Обогрев):</span>
+                    <p className="text-slate-200 text-[11px] leading-relaxed">
+                      В I кв. расход вырос на <strong className="text-rose-400">+105%</strong> из-за усиленного электрического отопления.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <span className="text-[9px] text-emerald-400 uppercase font-bold block">Летняя оптимизация AC:</span>
+                    <p className="text-slate-200 text-[11px] leading-relaxed">
+                      В мае–июле достигнуто чистое снижение потребления на <strong className="text-emerald-400">-13.6%</strong> по сравнению с 2025 г.
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <span className="text-[9px] text-amber-400 uppercase font-bold block">Главный драйвер чека:</span>
+                    <p className="text-slate-200 text-[11px] leading-relaxed">
+                      Рост финальной суммы (+145.7%) вызван удвоением базового тарифа с 2.79 до 5.69 TL/кВт·ч.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span>Объем: 5 051 кВт·ч</span>
+                <span className="text-sky-300 font-bold">Сумма: 28 770 TL</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Tab 2: Climate & Weather */}
+        {hubTab === 'CLIMATE' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+          >
+            <div className="lg:col-span-6">
+              <KemerWeatherCard />
+            </div>
+
+            {/* Seasonal Profile Comparison */}
+            <div className="lg:col-span-6 glass-card p-6 sm:p-8 rounded-[2rem] space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                      <Sun className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Климатический Профиль Виллы</h3>
+                      <p className="text-[10px] text-slate-400 font-mono">3 сезона нагрузки</p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-mono">
+                    ~68% чека — климат
+                  </span>
+                </div>
+
+                {/* Season Items */}
+                <div className="space-y-3 font-mono text-xs">
+                  {/* Winter */}
+                  <div className="p-3 rounded-2xl bg-slate-900/60 border border-white/5 space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sky-400 font-bold flex items-center gap-1.5">
+                        <Snowflake className="w-3.5 h-3.5" /> Зима (Обогрев)
+                      </span>
+                      <span className="text-white font-bold">1 511 кВт·ч/мес</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-sky-400 h-full w-[100%]" />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Конвекторы / Теплый пол</span>
+                      <span className="text-sky-300">Пик (100%) • ~8 597 TL</span>
+                    </div>
+                  </div>
+
+                  {/* Summer */}
+                  <div className="p-3 rounded-2xl bg-slate-900/60 border border-white/5 space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-amber-400 font-bold flex items-center gap-1.5">
+                        <Sun className="w-3.5 h-3.5" /> Лето (Охлаждение)
+                      </span>
+                      <span className="text-white font-bold">1 133 кВт·ч/мес</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-amber-400 h-full w-[75%]" />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Сплит-системы AC</span>
+                      <span className="text-amber-300">75% от пика • ~6 446 TL</span>
+                    </div>
+                  </div>
+
+                  {/* Off-season */}
+                  <div className="p-3 rounded-2xl bg-slate-900/60 border border-white/5 space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                        <Leaf className="w-3.5 h-3.5" /> Межсезонье (Весна/Осень)
+                      </span>
+                      <span className="text-white font-bold">212 кВт·ч/мес</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-emerald-400 h-full w-[14%]" />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>Базовая бытовая техника</span>
+                      <span className="text-emerald-300">Минимум (14%) • ~1 206 TL</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] font-mono text-slate-400">
+                <span>Амплитуда колебаний: <strong className="text-white">7.1x</strong></span>
+                <span className="text-sky-300">Метеостанция Kemer</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Tab 3: 3-Tariff Phase Breakdown */}
+        {hubTab === 'TARIFF_PHASES' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+          >
+            {/* Daily living cost & 3-phase split */}
+            <div className="lg:col-span-7 glass-card p-6 sm:p-8 rounded-[2rem] space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white tracking-tight">
+                    Суточный Профиль Расходов (3-Tariff)
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    Распределение по временным зонам суток
+                  </p>
+                </div>
+                <div className="text-right font-mono">
+                  <span className="text-lg font-bold text-white">231.8 TL</span>
+                  <span className="text-[10px] text-slate-400 block">/ день в июле</span>
+                </div>
+              </div>
+
+              {/* 3-Tariff Phases */}
+              <div className="grid grid-cols-3 gap-3 font-mono text-xs">
+                <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-1">
+                  <span className="text-[10px] text-slate-400 block">Дневной (T1)</span>
+                  <span className="text-base font-bold text-white block">118.2 TL</span>
+                  <span className="text-[10px] text-sky-400">51% (06:00–17:00)</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-1">
+                  <span className="text-[10px] text-slate-400 block">Пиковый (T2)</span>
+                  <span className="text-base font-bold text-amber-400 block">83.4 TL</span>
+                  <span className="text-[10px] text-amber-400">36% (17:00–22:00)</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-1">
+                  <span className="text-[10px] text-slate-400 block">Ночной (T3)</span>
+                  <span className="text-base font-bold text-emerald-400 block">30.2 TL</span>
+                  <span className="text-[10px] text-emerald-400">13% (22:00–06:00)</span>
+                </div>
+              </div>
+
+              {/* 7-Day Weekly Profile */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
+                  <span>Профиль по дням недели:</span>
+                  <span className="text-amber-400 font-bold">Выходные +26% (Вилла)</span>
+                </div>
+                <div className="flex items-end justify-between gap-2 h-14 pt-2 border-t border-white/5">
+                  {[
+                    { day: 'Пн', pct: '75%' },
+                    { day: 'Вт', pct: '73%' },
+                    { day: 'Ср', pct: '80%' },
+                    { day: 'Чт', pct: '77%' },
+                    { day: 'Пт', pct: '88%' },
+                    { day: 'Сб', pct: '98%', peak: true },
+                    { day: 'Вс', pct: '100%', peak: true },
+                  ].map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                      <div className="w-full bg-slate-900 rounded-t-md h-10 flex items-end overflow-hidden">
+                        <div 
+                          className={`w-full rounded-t-sm ${d.peak ? 'bg-amber-400' : 'bg-sky-400'}`} 
+                          style={{ height: d.pct }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">{d.day}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Taxes and Regulatory Surcharge */}
+            <div className="lg:col-span-5 glass-card p-6 sm:p-8 rounded-[2rem] space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                      <Receipt className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Структура Налогов и Сборов</h3>
+                      <p className="text-[10px] text-slate-400 font-mono">11.6% от счета (2026 YTD)</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-emerald-400">
+                    3 336 TL
+                  </span>
+                </div>
+
+                <div className="space-y-2.5 font-mono text-xs">
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-bold">НДС (KDV 8–10%)</span>
+                      <span className="text-white font-bold">2 301 TL</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">69% от всех сборов</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-bold">Муниципальный налог (BTV 5%)</span>
+                      <span className="text-white font-bold">718 TL</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">21.5% городской сбор</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-bold">Энергофонды (1%)</span>
+                      <span className="text-white font-bold">317 TL</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">9.5% поддержка инфраструктуры</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-white/5 text-[10px] font-mono text-slate-400 flex justify-between">
+                <span>В среднем в месяц:</span>
+                <span className="text-emerald-400 font-bold">476.6 TL / мес</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Tab 4: AI Forecast */}
+        {hubTab === 'AI_FORECAST' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <AiForecastCard invoices={invoices} targetMonthLabel="Август 2026" />
+          </motion.div>
+        )}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* TIER 3: WHAT-IF SIMULATOR & CURRENT BILL ACTION CENTER */}
+      {/* ========================================================================= */}
+      <div className="space-y-6">
+        <WhatIfSimulator currentMonthlyKwh={latestInvoice.kwh} currentUnitRate={latestInvoice.unit_rate_tl} />
+
+        {/* Current Bill Quick Action Panel */}
+        <div className="glass-card p-6 sm:p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-slate-900/90 to-slate-900/60 border border-white/10 shadow-xl">
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+              <Clock className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Invoice History</h3>
-              <p className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-widest mt-0.5">
-                {invoices.length} Processed Documents
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-white">
+                  Квитанция за {latestInvoice.period} (Июль 2026)
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold font-mono">
+                  К оплате
+                </span>
+              </div>
+              <p className="text-xs font-mono text-slate-400 mt-0.5">
+                Расход: {formatKWh(latestInvoice.kwh)} • Срок оплаты до {latestInvoice.due_date}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+            <button
+              onClick={() => onSelectInvoice(latestInvoice)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 text-xs font-bold transition-all cursor-pointer font-mono"
+            >
+              <FileDown className="w-4 h-4 text-sky-400" />
+              <span>Просмотр квитанции</span>
+            </button>
+
             <button
               onClick={onNavigateToInvoices}
-              className="px-4 py-2.5 rounded-2xl bg-[#191f31] border border-[#424754] text-[#adc6ff] text-xs font-bold hover:bg-[#1f2d42] transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer"
             >
-              Full Screen View
-            </button>
-            <button
-              onClick={() => setIsRegistryOpen(!isRegistryOpen)}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-[#adc6ff] text-[#001a42] text-xs font-bold transition-all hover:shadow-[0_0_20px_rgba(173,198,255,0.4)]"
-            >
-              <span>{isRegistryOpen ? 'Hide Invoices' : 'View All Invoices'}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isRegistryOpen ? 'rotate-180' : ''}`} />
+              <span>Все счета ({invoices.length})</span>
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
-
-        {isRegistryOpen && (
-          <div className="p-6 sm:p-8 space-y-6">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="relative w-full md:w-96">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
-                <input
-                  type="text"
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                  placeholder="Filter by period, bill date..."
-                  className="w-full bg-[#151b2d] border border-[#424754] rounded-2xl pl-11 pr-4 py-2.5 text-xs focus:outline-none focus:border-[#adc6ff] text-white font-mono placeholder:text-[#94a3b8]"
-                />
-              </div>
-
-              <div className="flex p-1 bg-[#151b2d] rounded-2xl border border-[#424754]">
-                {(['ALL', '2026', '2025'] as const).map((yr) => (
-                  <button
-                    key={yr}
-                    onClick={() => setTableYearFilter(yr)}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                      tableYearFilter === yr
-                        ? 'bg-[#adc6ff] text-[#001a42]'
-                        : 'text-[#94a3b8] hover:text-white'
-                    }`}
-                  >
-                    {yr}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest border-b border-[#424754]">
-                    <th className="pb-4 px-4">Period</th>
-                    <th className="pb-4 px-4">Bill Date</th>
-                    <th className="pb-4 px-4">Usage (kWh)</th>
-                    <th className="pb-4 px-4">Rate (TL)</th>
-                    <th className="pb-4 px-4">Net Energy</th>
-                    <th className="pb-4 px-4">Total Amount</th>
-                    <th className="pb-4 px-4 text-center">Status</th>
-                    <th className="pb-4 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#424754]">
-                  {filteredInvoices.map((inv) => (
-                    <tr
-                      key={inv.id}
-                      onClick={() => onSelectInvoice(inv)}
-                      className="hover:bg-white/[0.03] transition-colors cursor-pointer group"
-                    >
-                      <td className="py-4 px-4 font-bold text-white font-mono text-sm">{inv.period}</td>
-                      <td className="py-4 px-4 text-[#94a3b8] text-xs">{inv.bill_date}</td>
-                      <td className="py-4 px-4 text-[#adc6ff] font-bold font-mono text-sm">
-                        {inv.kwh.toLocaleString('ru-RU')}
-                      </td>
-                      <td className="py-4 px-4 text-[#94a3b8] font-mono text-xs">
-                        {inv.unit_rate_tl.toFixed(3)}
-                      </td>
-                      <td className="py-4 px-4 text-[#94a3b8] font-mono text-sm">
-                        {Math.round(inv.net_amount_tl).toLocaleString('ru-RU')}
-                      </td>
-                      <td className="py-4 px-4 font-bold text-white font-mono text-base">
-                        {inv.total_amount_tl.toLocaleString('ru-RU')}{' '}
-                        <span className="text-[10px] opacity-40 font-normal">TL</span>
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        {inv.status === 'PENDING' ? (
-                          <span className="px-2.5 py-1 rounded-md bg-[#f59e0b]/10 text-[#f59e0b] text-[9px] font-bold uppercase tracking-wider border border-[#f59e0b]/20">
-                            Pending
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-md bg-[#4edea3]/10 text-[#4edea3] text-[9px] font-bold uppercase tracking-wider border border-[#4edea3]/20">
-                            Paid
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <span className="text-xs text-[#adc6ff] group-hover:underline font-bold flex items-center justify-end gap-1">
-                          View <FileDown className="w-3.5 h-3.5" />
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
